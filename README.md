@@ -183,13 +183,17 @@ Here are the opcodes for the main instructions of the subset:
 | Signal | Purpose | Specifics |
 | --- | --- | --- |
 | `RegWrite` | Write-back specification | `0`: No WB, `1`: WB |
-| `ALUSrc` | ALU's 2nd operand: register (`rs2`) or immediate | `0`: Register input, `1`:Second input for the ALU from immediate generator |
+| `ALUSrc` | ALU's 2nd operand: register (`rs2`) or immediate | `00`: Register input, `01`:Second input for the ALU from immediate generator, `10` PC input |
 | `MemRead` | For instructions that read from memory(lw,lb etc) | `0`: No need to read, `1`: Read from memory |
 | `MemWrite` | For instructions that store data in memory(sw etc) | `0`: No write, `1`: Write to memory |
 | `ResultSrc` | Write-back value comes from: ALU result, memory data, or `PC+4` (for `jal`)? | 2bit datatype. `00`: ALU result, `01`: Memory data, `10`: PC + 4 |
 | `Branch` | Branch signal for PC updating | `0`: No branch, `1`: Branch |
 | `Jump` | Is this `jal` (unconditional PC change)? | `0`: Do not jump, `1`: Jump |
 
-### Design decisions  
+## Final Integration
 
-1.
+Final integration is happening in stages and verified at every part of the process.  
+First the FETCH module was created and then connected to the main CPU module.  
+Every module is connected gradually and then verified and tested with the CPU testbench script.  
+Note that the cpu test script is mainly AI generated, a decision made for time efficiency, since it is updated in every part of the integration process.  
+> Pending WB integration and C compiler toolchain support  
