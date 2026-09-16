@@ -58,6 +58,10 @@ module cpu_tb;
     dut.if_module.imem.mem[1] = 32'hFFD0_0113;
     // add x3, x1, x2
     dut.if_module.imem.mem[2] = 32'h0020_81B3;
+    // lui x4, 0x12345
+    dut.if_module.imem.mem[3] = 32'h1234_5237;
+    // auipc x5, 0x1
+    dut.if_module.imem.mem[4] = 32'h0000_1297;
 
     dut.register_file.regfile[1] = 32'd10;
     dut.register_file.regfile[2] = 32'd20;
@@ -72,7 +76,7 @@ module cpu_tb;
       $error("FETCH 0 FAIL: got %h", instruction_out);
     if (immediate !== 32'd5)
       $error("ADDI 5 IMMEDIATE FAIL: got %h", immediate);
-    if (RegWrite !== 1'b1 || ALUSrc !== 2'b01 || ALUop !== 4'b0000)
+    if (RegWrite !== 1'b0 || ALUSrc !== 2'b01 || ALUop !== 4'b0000)
       $error("ADDI CONTROL FAIL: RegWrite=%b ALUSrc=%b ALUop=%b",
              RegWrite, ALUSrc, ALUop);
 
@@ -95,15 +99,53 @@ module cpu_tb;
       $error("PC 8 FAIL: got %h", pc);
     if (instruction_out !== 32'h0020_81B3)
       $error("FETCH 2 FAIL: got %h", instruction_out);
-    if (reg1_data !== 32'd10 || reg2_data !== 32'd20)
+    if (reg1_data !== 32'd5 || reg2_data !== 32'hFFFF_FFFD)
       $error("REGISTER READ FAIL: rs1=%h rs2=%h", reg1_data, reg2_data);
-    if (result !== 32'd30 || zero !== 1'b0)
-      $error("ADD ALU FAIL: result=%h zero=%b", result, zero);
+    if (result !== 32'd2 || zero !== 1'b0)
+      $error("ADD ALU FAIL: expected 2, result=%h zero=%b", result, zero);
     if (RegWrite !== 1'b1 || ALUSrc !== 2'b00 || ALUop !== 4'b0000)
       $error("ADD CONTROL FAIL: RegWrite=%b ALUSrc=%b ALUop=%b",
              RegWrite, ALUSrc, ALUop);
 
-    $display("CPU FETCH/DECODE/IMMEDIATE/REGISTER TESTS COMPLETED");
+    @(posedge clk);
+    #1;
+    if (pc !== 32'd12)
+      $error("PC 12 FAIL: got %h", pc);
+    if (instruction_out !== 32'h1234_5237)
+      $error("LUI FETCH FAIL: got %h", instruction_out);
+    if (immediate !== 32'h1234_5000)
+      $error("LUI IMMEDIATE FAIL: got %h", immediate);
+    if (result !== 32'h1234_5000)
+      $error("LUI RESULT FAIL: got %h", result);
+    if (ALUSrc !== 2'b01 || ALUop !== 4'b1011 || RegWrite !== 1'b1)
+      $error("LUI CONTROL FAIL: RegWrite=%b ALUSrc=%b ALUop=%b",
+             RegWrite, ALUSrc, ALUop);
+
+    @(posedge clk);
+    #1;
+    if (dut.register_file.regfile[4] !== 32'h1234_5000)
+      $error("LUI WRITE-BACK FAIL: x4=%h", dut.register_file.regfile[4]);
+    if (pc !== 32'd16)
+      $error("PC 16 FAIL: got %h", pc);
+    if (instruction_out !== 32'h0000_1297)
+      $error("AUIPC FETCH FAIL: got %h", instruction_out);
+    if (immediate !== 32'h0000_1000)
+      $error("AUIPC IMMEDIATE FAIL: got %h", immediate);
+    if (result !== 32'h0000_1010)
+      $error("AUIPC RESULT FAIL: got %h", result);
+    if (ALUSrc !== 2'b01 || ALUop !== 4'b0000 ||
+        dut.AluA_Src_wire !== 1'b1 || RegWrite !== 1'b1)
+      $error("AUIPC CONTROL FAIL: RegWrite=%b AluA_Src=%b ALUSrc=%b ALUop=%b",
+             RegWrite, dut.AluA_Src_wire, ALUSrc, ALUop);
+
+    @(posedge clk);
+    #1;
+    if (dut.register_file.regfile[3] !== 32'd2)
+      $error("ADD WRITE-BACK FAIL: x3=%h", dut.register_file.regfile[3]);
+    if (dut.register_file.regfile[5] !== 32'h0000_1010)
+      $error("AUIPC WRITE-BACK FAIL: x5=%h", dut.register_file.regfile[5]);
+
+    $display("CPU ARITHMETIC/UPPER-IMMEDIATE TESTS COMPLETED");
     $finish;
   end
 endmodule

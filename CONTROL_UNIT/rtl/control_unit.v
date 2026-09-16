@@ -6,6 +6,7 @@ module control_unit (
     Branch,
     Jump,
     Exception,
+    AluA_Src,
     output reg [1:0] ResultSrc,
     ALUSrc,
     output reg [3:0] ALUop
@@ -100,9 +101,9 @@ module control_unit (
         Exception = 1'b0;
         ALUop = 4'b1011;
       end
-      7'b0010111: begin
+      7'b0010111: begin  // AUIPC
         RegWrite = 1'b1;
-        ALUSrc = 2'b10;  // This means the the SRC is PC
+        ALUSrc = 2'b01;  // This means the the SRC is IMMEDIATE!!!!PC comes via ALU_A_SRC(SEE END OF THIS FILE)!!!!
         MemRead = 1'b0;
         MemWrite = 1'b0;
         ResultSrc = 2'b00;
@@ -158,6 +159,9 @@ module control_unit (
         ALUop = 4'b0000;
       end
     endcase
+    // AUIPC integration and ALU_A_SRC definition
+    if (instruction[6:0] == 7'b0010111) AluA_Src = 1;
+    else AluA_Src = 0;
   end
 
 endmodule

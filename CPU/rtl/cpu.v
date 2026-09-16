@@ -22,14 +22,14 @@ module cpu (
 );
   wire [31:0] fetched_instruction;
   wire [31:0] immediate_wire;
-  wire zero_wire, wb_enable_wire;
+  wire zero_wire, reg_write_wire, wb_enable_wire, AluA_Src_wire;
   wire [3:0] ALUop_wire;
   wire [1:0] ResultSrc_wire, ALUSrc_wire;
   wire [31:0] reg1_data_wire, reg2_data_wire;
-  wire [31:0] alu_second_input, alu_result_wire;
+  wire [31:0] alu_second_input, alu_first_input, alu_result_wire;
   wire [31:0] pc_wire;
   wire [31:0] wb_data_wire;
-  reg [31:0] alu_second_input_reg, wb_reg;
+  reg [31:0] alu_second_input_reg, alu_first_input_reg, wb_reg;
   instruction_fetch if_module (
       .clk(clk),
       .reset(reset),
@@ -47,10 +47,11 @@ module cpu (
       .Branch(Branch),
       .Jump(Jump),
       .Exception(Exception),
+      .AluA_Src(AluA_Src_wire),
       .ResultSrc(ResultSrc_wire),
       .ALUSrc(ALUSrc_wire),
       .ALUop(ALUop_wire),
-      .RegWrite(wb_enable_wire)
+      .RegWrite(reg_write_wire)
   );
   reg_file register_file (
       .clk(clk),
@@ -63,7 +64,7 @@ module cpu (
       .reg2_data(reg2_data_wire)
   );
   alu alu_module (
-      .x(reg1_data_wire),
+      .x(alu_first_input),
       .y(alu_second_input),
       .opcode(ALUop_wire),
       .result(alu_result_wire),
@@ -84,7 +85,11 @@ module cpu (
       2'b10:   wb_reg = pc_wire + 32'd4;
       default: wb_reg = 32'b0;
     endcase
+    if (AluA_Src_wire == 1) alu_first_input_reg = pc_wire;
+    else alu_first_input_reg = reg1_data_wire;
   end
+  assign alu_first_input = alu_first_input_reg;
+  assign wb_enable_wire = reg_write_wire & ~reset;
   assign RegWrite = wb_enable_wire;
   assign wb_data_wire = wb_reg;
   assign pc = pc_wire;

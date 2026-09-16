@@ -198,3 +198,27 @@ First the FETCH module was created and then connected to the main CPU module.
 Every module is connected gradually and then verified and tested with the CPU testbench script.  
 Note that the cpu test script is mainly AI generated, a decision made for time efficiency, since it is updated in every part of the integration process.  
 > Pending WB integration and C compiler toolchain support  
+>
+### Main setbacks and difficulties
+
+#### Problem 1: LUI  
+
+The LUI datapath could not be completed since there was no ALU pass-through opcode.  
+**Solution:**  
+A new opcode was created and the ALU rtl was updated to include that feature. Then the control unit was modified for the lui instruction and used that code to conduct the ALU pass-through and into the WB.  
+Of course this is not a great performance decision since we could forward other tasks from other instructions into the ALU and get use of that in the pipeline, but it would a far more complex approach for a single instructions and the gains would be minimal.  
+
+#### Problem 2: AUIPC  
+
+This RISC-V instruction adds the upper immediate field to the PC.  
+But no such prediction was made for the control unit. So there was practically no way to add the PC to anything more than the content of the rs1 register since the x input of the ALU was directly connected to the Register file.  
+**Solution:**  
+Create a AluA_Select that selects between the register file and the pc input.  
+So the control unit and the overall cpu needed to be tweaked so as to accommodate this improvement.
+
+### ALU_A_SRC signal Matrix
+
+| ALU_A_SRC | Explanation |
+| -------------- | --------------- |
+| `0` | The first ALU input comes directly from the first output of the register file |
+| `1` | The first ALU input is PC(only used as mentioned for the auipc instruction) |
