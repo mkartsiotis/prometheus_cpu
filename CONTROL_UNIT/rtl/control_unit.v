@@ -4,11 +4,11 @@ module control_unit (
     MemRead,
     MemWrite,
     Branch,
-    Jump,
     Exception,
     AluA_Src,
     output reg [1:0] ResultSrc,
     ALUSrc,
+    Jump,
     output reg [3:0] ALUop
 );
   always @(*) begin
@@ -20,7 +20,7 @@ module control_unit (
         MemWrite = 1'b0;
         ResultSrc = 2'b00;
         Branch = 1'b0;
-        Jump = 1'b0;
+        Jump = 2'b00;
         Exception = 1'b0;
         case (instruction[14:12])
           3'b000:  ALUop = 4'b0000;
@@ -41,7 +41,7 @@ module control_unit (
         MemWrite = 1'b0;
         ResultSrc = 2'b01;
         Branch = 1'b0;
-        Jump = 1'b0;
+        Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b0000;
       end
@@ -52,7 +52,7 @@ module control_unit (
         MemWrite = 1'b1;
         ResultSrc = 2'b00;
         Branch = 1'b0;
-        Jump = 1'b0;
+        Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b0000;
       end
@@ -63,7 +63,7 @@ module control_unit (
         MemWrite = 1'b0;
         ResultSrc = 2'b00;
         Branch = 1'b1;
-        Jump = 1'b0;
+        Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b0001;
       end
@@ -74,7 +74,7 @@ module control_unit (
         MemWrite = 1'b0;
         ResultSrc = 2'b10;
         Branch = 1'b0;
-        Jump = 1'b1;
+        Jump = 2'b01;
         Exception = 1'b0;
         ALUop = 4'b0000;
       end
@@ -85,7 +85,7 @@ module control_unit (
         MemWrite = 1'b0;
         ResultSrc = 2'b10;
         Branch = 1'b0;
-        Jump = 1'b1;
+        Jump = 2'b10;
         Exception = 1'b0;
         ALUop = 4'b0000;
 
@@ -97,7 +97,7 @@ module control_unit (
         MemWrite = 1'b0;
         ResultSrc = 2'b00;
         Branch = 1'b0;
-        Jump = 1'b0;
+        Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b1011;
       end
@@ -108,7 +108,7 @@ module control_unit (
         MemWrite = 1'b0;
         ResultSrc = 2'b00;
         Branch = 1'b0;
-        Jump = 1'b0;
+        Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b0000;
       end
@@ -119,7 +119,7 @@ module control_unit (
         MemWrite = 1'b0;
         ResultSrc = 2'b00;
         Branch = 1'b0;
-        Jump = 1'b0;
+        Jump = 2'b00;
         Exception = 1'b0;
         case ({
           instruction[14:12], instruction[31:25]
@@ -143,7 +143,7 @@ module control_unit (
         MemWrite = 1'b0;
         ResultSrc = 2'b00;
         Branch = 1'b0;
-        Jump = 1'b0;
+        Jump = 2'b00;
         Exception = 1'b1;
         ALUop = 4'b0000;
       end
@@ -154,7 +154,7 @@ module control_unit (
         MemWrite = 1'b0;
         ResultSrc = 2'b00;
         Branch = 1'b0;
-        Jump = 1'b0;
+        Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b0000;
       end

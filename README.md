@@ -189,7 +189,7 @@ Here are the opcodes for the main instructions of the subset:
 | `MemWrite` | For instructions that store data in memory(sw etc) | `0`: No write, `1`: Write to memory |
 | `ResultSrc` | Write-back value comes from: ALU result, memory data, or `PC+4` (for `jal`)? | 2bit datatype. `00`: ALU result, `01`: Memory data, `10`: PC + 4 |
 | `Branch` | Branch signal for PC updating | `0`: No branch, `1`: Branch |
-| `Jump` | Is this `jal` (unconditional PC change)? | `0`: Do not jump, `1`: Jump |
+| `Jump` | Is this `jal` (unconditional PC change)? (JAL AND JALR DISTINCTION) | `00`: Do not jump, `01`: Jump, `10` Jump to register |
 
 ## Final Integration
 
@@ -215,6 +215,13 @@ But no such prediction was made for the control unit. So there was practically n
 **Solution:**  
 Create a AluA_Select that selects between the register file and the pc input.  
 So the control unit and the overall cpu needed to be tweaked so as to accommodate this improvement.
+
+#### Problem 3: Jump and Branch integration  
+
+Detected an issue with jump signal since there is no distinguish between jal and jalr.  
+**Solution:**  
+Update jump signal to 2 bits and then select the next PC based on that.  
+Also simplified fetch module so as to move PC control to the main CPU.  
 
 ### ALU_A_SRC signal Matrix
 

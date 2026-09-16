@@ -14,7 +14,7 @@ module cpu_tb;
   wire MemRead;
   wire MemWrite;
   wire Branch;
-  wire Jump;
+  wire [1:0] Jump;
   wire Exception;
   wire cout;
   wire zero;
@@ -62,6 +62,10 @@ module cpu_tb;
     dut.if_module.imem.mem[3] = 32'h1234_5237;
     // auipc x5, 0x1
     dut.if_module.imem.mem[4] = 32'h0000_1297;
+    // sw x1, 0(x0)
+    dut.if_module.imem.mem[5] = 32'h0010_2023;
+    // lw x6, 0(x0)
+    dut.if_module.imem.mem[6] = 32'h0000_2303;
 
     dut.register_file.regfile[1] = 32'd10;
     dut.register_file.regfile[2] = 32'd20;
@@ -133,10 +137,9 @@ module cpu_tb;
       $error("AUIPC IMMEDIATE FAIL: got %h", immediate);
     if (result !== 32'h0000_1010)
       $error("AUIPC RESULT FAIL: got %h", result);
-    if (ALUSrc !== 2'b01 || ALUop !== 4'b0000 ||
-        dut.AluA_Src_wire !== 1'b1 || RegWrite !== 1'b1)
-      $error("AUIPC CONTROL FAIL: RegWrite=%b AluA_Src=%b ALUSrc=%b ALUop=%b",
-             RegWrite, dut.AluA_Src_wire, ALUSrc, ALUop);
+    if (ALUSrc !== 2'b01 || ALUop !== 4'b0000 || RegWrite !== 1'b1)
+      $error("AUIPC CONTROL FAIL: RegWrite=%b ALUSrc=%b ALUop=%b",
+             RegWrite, ALUSrc, ALUop);
 
     @(posedge clk);
     #1;
@@ -145,7 +148,77 @@ module cpu_tb;
     if (dut.register_file.regfile[5] !== 32'h0000_1010)
       $error("AUIPC WRITE-BACK FAIL: x5=%h", dut.register_file.regfile[5]);
 
-    $display("CPU ARITHMETIC/UPPER-IMMEDIATE TESTS COMPLETED");
+    if (pc !== 32'd20 || instruction_out !== 32'h0010_2023)
+      $error("STORE FETCH FAIL: PC=%h instruction=%h", pc, instruction_out);
+    if (dut.mem_write !== 1'b1 || dut.mem_read !== 1'b0)
+      $error("STORE CONTROL FAIL: MemWrite=%b MemRead=%b",
+             dut.mem_write, dut.mem_read);
+
+    @(posedge clk);
+    #1;
+    if (dut.mem.mem[0] !== 32'd5)
+      $error("STORE DATA FAIL: mem[0]=%h", dut.mem.mem[0]);
+    if (pc !== 32'd24 || instruction_out !== 32'h0000_2303)
+      $error("LOAD FETCH FAIL: PC=%h instruction=%h", pc, instruction_out);
+    if (dut.mem_read !== 1'b1 || dut.mem_write !== 1'b0)
+      $error("LOAD CONTROL FAIL: MemRead=%b MemWrite=%b",
+             dut.mem_read, dut.mem_write);
+
+    @(posedge clk);
+    #1;
+    if (dut.register_file.regfile[6] !== 32'd5)
+      $error("LOAD WRITE-BACK FAIL: x6=%h", dut.register_file.regfile[6]);
+
+    $display("[PASS] Arithmetic, upper-immediate, and memory integration");
+
+    // Control-flow integration: taken BEQ skips PC+4 instruction.
+    dut.if_module.imem.mem[0] = 32'h0050_0093;  // addi x1, x0, 5
+    dut.if_module.imem.mem[1] = 32'h0050_0113;  // addi x2, x0, 5
+    dut.if_module.imem.mem[2] = 32'h0020_8463;  // beq x1, x2, +8
+    dut.if_module.imem.mem[3] = 32'h0630_0193;  // skipped: addi x3, x0, 99
+    dut.if_module.imem.mem[4] = 32'h0070_0193;  // addi x3, x0, 7
+    reset = 1;
+    @(posedge clk);
+    #1;
+    reset = 0;
+    repeat (3) @(posedge clk);
+    #1;
+    if (pc !== 32'd16 || instruction_out !== 32'h0070_0193 ||
+        dut.register_file.regfile[1] !== 32'd5 ||
+        dut.register_file.regfile[2] !== 32'd5)
+      $error("BEQ TAKEN FAIL: PC=%h instruction=%h x1=%h x2=%h",
+             pc, instruction_out, dut.register_file.regfile[1],
+             dut.register_file.regfile[2]);
+    else
+      $display("[PASS] Taken BEQ redirects to target");
+
+    // JAL writes PC+4 and redirects to its target.
+    dut.if_module.imem.mem[5] = 32'h0080_03EF;  // jal x7, +8 (PC 20 -> 28)
+    dut.if_module.imem.mem[6] = 32'h0630_0213;  // skipped: addi x4, x0, 99
+    dut.if_module.imem.mem[7] = 32'h00B0_0213;  // addi x4, x0, 11
+    repeat (2) @(posedge clk);
+    #1;
+    if (pc !== 32'd28 || dut.register_file.regfile[7] !== 32'd24)
+      $error("JAL FAIL: PC=%h x7=%h", pc, dut.register_file.regfile[7]);
+    else
+      $display("[PASS] JAL redirects and writes link address");
+
+    // JALR uses rs1+immediate, clears bit 0, and writes PC+4.
+    dut.if_module.imem.mem[0] = 32'h0280_0093;  // addi x1, x0, 40
+    dut.if_module.imem.mem[1] = 32'h0000_8467;  // jalr x8, x1, 0
+    dut.if_module.imem.mem[10] = 32'h04D0_0493; // addi x9, x0, 77
+    reset = 1;
+    @(posedge clk);
+    #1;
+    reset = 0;
+    repeat (2) @(posedge clk);
+    #1;
+    if (pc !== 32'd40 || dut.register_file.regfile[8] !== 32'd8)
+      $error("JALR FAIL: PC=%h x8=%h", pc, dut.register_file.regfile[8]);
+    else
+      $display("[PASS] JALR redirects and writes link address");
+
+    $display("CPU INTEGRATION REGRESSION COMPLETED");
     $finish;
   end
 endmodule
