@@ -98,7 +98,7 @@ module control_unit (
         Branch = 1'b0;
         Jump = 1'b0;
         Exception = 1'b0;
-        ALUop = 4'b0000;
+        ALUop = 4'b1011;
       end
       7'b0010111: begin
         RegWrite = 1'b1;

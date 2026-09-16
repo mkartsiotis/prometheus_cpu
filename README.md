@@ -66,6 +66,7 @@ Main target for the coming days is building a single cycle basic system, then ru
 | `0111` | `SLTU` | Set Less Than Unsigned | Unsigned comparison: returns `1` if `x < y`, else `0`<br> |
 | `1000` | `SLL` | Shift Left Logical | Logical left shift of `x` by shift amount `y`<br> |
 | `1001` | `SRL` | Shift Right Logical | Logical right shift of `x` by shift amount `y`<br> |
+| `1011` | LUI | Load upper immediate | ALU pass-through the second input |
 
 ### ALU Design choices
 

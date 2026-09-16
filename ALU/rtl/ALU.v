@@ -11,16 +11,17 @@ module alu #(
 );
   wire subtract = opcode[0];
   // MATRIX WITH THE OPCODES
-  localparam [3:0] ADD  = 4'b0000;
-  localparam [3:0] SUB  = 4'b0001;
-  localparam [3:0] SLT  = 4'b0011;
+  localparam [3:0] ADD = 4'b0000;
+  localparam [3:0] SUB = 4'b0001;
+  localparam [3:0] SLT = 4'b0011;
   localparam [3:0] SLTU = 4'b0111;
-  localparam [3:0] AND  = 4'b0010;
-  localparam [3:0] OR   = 4'b0100;
-  localparam [3:0] XOR  = 4'b0101;
-  localparam [3:0] NOR  = 4'b0110;
-  localparam [3:0] SLL  = 4'b1000;
-  localparam [3:0] SRL  = 4'b1001;
+  localparam [3:0] AND = 4'b0010;
+  localparam [3:0] OR = 4'b0100;
+  localparam [3:0] XOR = 4'b0101;
+  localparam [3:0] NOR = 4'b0110;
+  localparam [3:0] SLL = 4'b1000;
+  localparam [3:0] SRL = 4'b1001;
+  localparam [3:0] PASS_Y = 4'b1011;
   wire [WIDTH-1:0] sum;
   wire adder_cout, adder_overflow, adder_zero, slt, sltu;
   adder #(
@@ -71,6 +72,7 @@ module alu #(
       NOR: result = nor_res;
       SLL: result = sll_res;
       SRL: result = srl_res;
+      PASS_Y: result = y;
       default: result = {WIDTH{1'b0}};
     endcase
   end
