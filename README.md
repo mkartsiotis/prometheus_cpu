@@ -229,3 +229,9 @@ Also simplified fetch module so as to move PC control to the main CPU.
 | -------------- | --------------- |
 | `0` | The first ALU input comes directly from the first output of the register file |
 | `1` | The first ALU input is PC(only used as mentioned for the auipc instruction) |
+
+### Testing of the integrated system
+
+Testing of the basic system as well as submodules is conducted with the test script.
+It conducts first individual and then complete testing of the pipeline.  
+Note that this was gco-developed with github-copilot cli tool(basic script was human made and then copilot orchestrated the gradual integrated testing updates to the file).
