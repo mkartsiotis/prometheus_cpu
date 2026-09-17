@@ -1,13 +1,11 @@
-# Zeus TPU
+# Prometheus CPU
 
 ## Basic Idea
 
 TPU's are the backbone of the recent AI breakthroughs and as a hardware technology seem to be less complex and more optimized than modern cpu's.
 All of these led to the decision of creating a tpu based on verilog as a personal project, to enhance the understanding of TPUS and AI and develop skills, specifically learning to create VLSI's with verilog.
 
-## Project Outline
-
-Since the creator of this repository is a complete beginner in all of these things it is better to break the process into smaller steps and targets before pushing through the creation of a complex general system.
+So this is essentially a baseline repository validating Verilog workflows on a CPU before moving on to creating a custom instruction extension and an acceleration module in the future.
 
 ## Inital steps for building the basic skills  
 
@@ -31,16 +29,7 @@ Add pipelining and finetune the architecture by creating a hazard mitigation uni
 
 ### Step 5
 
-Create or use an existing MIPS assembler based on this specific architecture and test the system.
-
-### Step 6
-
-Back to basics. Clean redesign of everything ISA, Cache and design choices.
-Create a complete and organized plan for the TPU architecture.
-
-### NEXT STEPS
-
-Build, test, fail, iterate!  
+Create or use an existing RISC-V assembler based on this specific architecture and test the system.
 
 ### Project Progress
 
@@ -48,9 +37,6 @@ Restarted the project recently with the hope of mastering Verilog and SystemVeri
 Quickly noticed that building a TPU without a dedicated CPU would be a mistake so in the coming weeks I will be designing a RISC 5 stage pipelined CPU that will be used in parallel with the TPU.  
 
 I am also working on discreet simulations for every part of the CPU that I am building, getting familiar with simulation tools that are going to help trace down errors quickly once the project is scaled.  
-
-Just completed the basic ALU modules and now focusing on the wrapper as well as the register file.  
-Main target for the coming days is building a single cycle basic system, then run tests and verifications on that before scaling and optimizing to a 5 stage pipeline with custom propagation units etc...
 
 ## ALU design choices and OPCODES
 
@@ -345,4 +331,89 @@ Just for reference:
 
 > Note that the validation was modified for benchmark testing and the results are presented in the above matrix.
 
-### Synthesis Data Metrics
+## Synthesis Data Metrics
+>
+> Note: Initial synthesis data was formatted and collected from the yosys output file using AI tools.  
+
+### Yosys Synthesis Report — CPU Design
+
+Generated from `cpu_yosys.log` (Yosys 0.66, top module: `cpu`).
+Flow: `read_verilog → hierarchy → proc → memory → opt → check → stat`
+
+#### 1. Top-Level Summary (whole design, `cpu` + all submodules)
+
+| Metric | Value |
+| --- | --- |
+| Top module | `cpu` |
+| Total cells (post-synthesis) | 19,160 |
+| Total flip-flops (`$dffe` + `$sdff`) | 9,185 |
+| Total combinational cells | 9,975 |
+| Total wires | 10,361 (31,515 wire bits) |
+| Public (named) wires | 421 (11,432 bits) |
+| Ports | 86 (1,264 bits) |
+| Submodules | 6 (`alu`, `control_unit`, `immediate_generator`, `instruction_fetch`, `memory`, `reg_file`) |
+| Hierarchical memories inferred | 3 (`memory.mem`, `reg_file.regfile`, `control_unit` ROM) |
+| Warnings | 66 unique / 66 total |
+| Errors | 0 |
+
+#### 2. Cell Type Breakdown (design-wide, including submodules)
+
+| Cell Type | Count | Function |
+| --- | --- | --- |
+| `$dffe` | 9,184 | D flip-flop with clock enable |
+| `$sdff` | 1 | D flip-flop with synchronous reset |
+| `$and` | 9,537 | 2-input AND gate |
+| `$mux` | 343 | 2-to-1 multiplexer |
+| `$eq` | 42 | Equality comparator |
+| `$pmux` | 8 | Parallel (one-hot/priority) mux |
+| `$not` | 16 | Inverter |
+| `$reduce_or` | 6 | Bitwise reduction OR |
+| `$logic_not` | 7 | Logical NOT |
+| `$add` | 5 | Adder |
+| `$xor` | 3 | XOR gate |
+| `$logic_and` | 3 | Logical AND |
+| `$or` | 1 | OR gate |
+| `$ne` | 1 | Not-equal comparator |
+| `$reduce_bool` | 1 | Reduce to single boolean |
+| `$shl` / `$shr` | 1 / 1 | Logical shift left / right |
+
+#### 3. Per-Module Breakdown (local counts, excluding submodules)
+
+| Module | Cells | Wires | Wire Bits | Ports | Port Bits | Notable Cells |
+| --- | --- | --- | --- | --- | --- | --- |
+| `cpu` (top, local logic only) | 20 | 67 | 1,009 | 22 | 214 | 3×`$add`, 6×`$eq`, 4×`$mux`, 2×`$pmux` |
+| `alu` (local logic only) | 14 | 32 | 345 | 7 | 103 | 10×`$eq`, `$pmux`, `$reduce_or` |
+| `adder` (ALU submodule) | 9 | 13 | 169 | 9 | 102 | 2×`$add`, 2×`$xor` |
+| `bitwiseops` (ALU submodule) | 4 | 6 | 192 | 6 | 192 | `$and`, `$or`, `$xor`, `$not` |
+| `shifter` (ALU submodule) | 2 | 4 | 101 | 4 | 101 | `$shl`, `$shr` |
+| `memory` | 16,954 | 9,023 | 24,995 | 6 | 99 | 8,496×`$and`, 8,192×`$dffe`, 258×`$mux` |
+| `reg_file` | 2,107 | 1,154 | 4,270 | 8 | 113 | 1,039×`$and`, 992×`$dffe`, 67×`$mux` |
+| `control_unit` | 39 | 40 | 101 | 11 | 48 | 18×`$eq`, 14×`$mux`, 4×`$pmux` |
+| `immediate_generator` | 10 | 10 | 73 | 2 | 64 | 7×`$eq`, `$pmux`, 2×`$reduce_or` |
+| `pc` | 1 | 5 | 98 | 4 | 66 | 1×`$sdff` |
+| `instruction_memory` | 0 (pure wiring) | 2 | 64 | 2 | 64 | — |
+| `instruction_fetch` | 0 (wraps `pc` + `instruction_memory`) | 5 | 98 | 5 | 98 | — |
+
+> `memory` and `reg_file` dominate the cell count because Yosys mapped their behavioral memory arrays into flip-flops + read/write muxes (see §4) — there is no block-RAM / macro inference at this generic stage.
+
+#### 4. Memory Inference & Mapping (before → after `MEMORY_MAP`)
+
+| Memory | Depth × Width | Read Ports | Write Ports | FFs Created | Read-Mux Cells | Write-Mux Blocks |
+| --- | --- | --- | --- | --- | --- | --- |
+| `memory.mem` (data memory) | 256 × 32-bit | 1 | 1 | 256 | 255 | 8,192 |
+| `reg_file.regfile` | 31 × 32-bit | 2 | 1 | 31 | 62 | 992 |
+| `control_unit` (auto ROM, decoder table) | 8 × 4-bit | 1 | 0 | 8 | 7 | 0 |
+
+> These three arrays were detected as `$mem` cells during `MEMORY_COLLECT`, then flattened by `MEMORY_MAP` into explicit flip-flops and mux trees (this is what generic synthesis without a `-libmap`/technology memory library does). This is the direct source of the 9,184 `$dffe` and the bulk of the `$and`/`$mux` cells above — it's a strong signal that, for an ASIC/FPGA flow, these should instead be mapped to real RAM macros/block RAM rather than left as flip-flop arrays.
+
+#### 5. Latches
+
+No `$dlatch` cells appear anywhere in the design hierarchy — **no inferred latches**, which is generally a good sign for a clocked/synchronous design (unintentional latches usually mean an incomplete `if`/`case` in a combinational always block).
+> Note that all of these metrics are for the whole cpu module. **It is important to build the fpga wrapper so as to limit the input pins**
+>
+### Issues  
+
+#### Physical constraints
+
+To overcome the high number of external input pins for the CPU module and external wrapper was created named fpga_top module.  
+At this stage of the project reaching out for guidance seems necessary so as to move into the physical word and execute targeted simulations based on specific FPGA modules.  
