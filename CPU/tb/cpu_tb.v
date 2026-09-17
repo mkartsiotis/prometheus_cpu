@@ -218,6 +218,44 @@ module cpu_tb;
     else
       $display("[PASS] JALR redirects and writes link address");
 
+    // Hand-coded program-image test.
+    // Sequence: arithmetic -> store/load -> taken branch -> jump -> result.
+    $display("[ RUN  ] Hand-coded program image");
+    dut.if_module.imem.mem[0]  = 32'h0050_0093;  // addi x1, x0, 5
+    dut.if_module.imem.mem[1]  = 32'h0070_0113;  // addi x2, x0, 7
+    dut.if_module.imem.mem[2]  = 32'h0020_81B3;  // add  x3, x1, x2
+    dut.if_module.imem.mem[3]  = 32'h0030_2023;  // sw   x3, 0(x0)
+    dut.if_module.imem.mem[4]  = 32'h0000_2203;  // lw   x4, 0(x0)
+    dut.if_module.imem.mem[5]  = 32'h0032_0463;  // beq  x4, x3, +8
+    dut.if_module.imem.mem[6]  = 32'h0630_0293;  // skipped: addi x5, x0, 99
+    dut.if_module.imem.mem[7]  = 32'h02A0_0293;  // addi x5, x0, 42
+    dut.if_module.imem.mem[8]  = 32'h0080_036F;  // jal  x6, +8
+    dut.if_module.imem.mem[9]  = 32'h0630_0393;  // skipped: addi x7, x0, 99
+    dut.if_module.imem.mem[10] = 32'h00B0_0393;  // addi x7, x0, 11
+
+    reset = 1;
+    @(posedge clk);
+    #1;
+    reset = 0;
+    repeat (10) @(posedge clk);
+    #1;
+
+    if (dut.mem.mem[0] !== 32'd12 ||
+        dut.register_file.regfile[3] !== 32'd12 ||
+        dut.register_file.regfile[4] !== 32'd12 ||
+        dut.register_file.regfile[5] !== 32'd42 ||
+        dut.register_file.regfile[6] !== 32'd36 ||
+        dut.register_file.regfile[7] !== 32'd11 ||
+        pc !== 32'd48) begin
+      $display("[FAIL] Hand-coded program image");
+      $display("  PC=%h mem[0]=%h x3=%h x4=%h x5=%h x6=%h x7=%h",
+               pc, dut.mem.mem[0], dut.register_file.regfile[3],
+               dut.register_file.regfile[4], dut.register_file.regfile[5],
+               dut.register_file.regfile[6], dut.register_file.regfile[7]);
+    end else begin
+      $display("[PASS] Hand-coded program image");
+    end
+
     $display("CPU INTEGRATION REGRESSION COMPLETED");
     $finish;
   end

@@ -235,3 +235,41 @@ Also simplified fetch module so as to move PC control to the main CPU.
 Testing of the basic system as well as submodules is conducted with the test script.
 It conducts first individual and then complete testing of the pipeline.  
 Note that this was gco-developed with github-copilot cli tool(basic script was human made and then copilot orchestrated the gradual integrated testing updates to the file).
+
+## From RTL to running RISC-V assembly  
+
+The assembler and linker integration was completed in the following order:
+
+1. Smoke integrated testing included in the tb of the integrated CPU(simple assembly scripts decoded for our system with the help of AI)  
+2. Use the GNU assembler and try to assemble a RISC-V simple program  
+3. Write the custom linker script and verify it works  
+4. Connect the output linker script to instruction memory and try and run that  
+5. Use existing assembly benchmarks and measure the CPU performance and FPGA metrics.  
+
+### Smoke test program
+
+```assembly
+addi x1, x0, 5
+addi x2, x0, 7
+add  x3, x1, x2
+sw   x3, 0(x0)
+lw   x4, 0(x0)
+beq  x4, x3, +8
+addi x5, x0, 99
+addi x5, x0, 42
+jal  x6, +8
+addi x7, x0, 99
+addi x7, x0, 11
+```
+
+The test verifies:
+
+```assembly
+mem[0] = 12
+x3     = 12
+x4     = 12
+x5     = 42
+x6     = 36      # JAL link address
+x7     = 11
+PC     = 48
+```
