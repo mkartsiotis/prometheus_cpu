@@ -281,6 +281,9 @@ This choice was selected for transparency and simplicity reasons.
 Later they maybe merged into a single module.  
 
 ### Creating the Linker Script
+>
+> For now the linker script does not handle bss nor static data.  
+*Static and stack implementation will be added in the near future.*
 
 ### Full toolchain implementation
 
@@ -300,3 +303,21 @@ flowchart TD
     E -->|"\$readmemh"| F["`Verilog instruction memory
     Simulation target &nbsp;`"]
 ```
+
+#### Automation of the process
+
+The complete simulation is conducted using 2 programs:
+
+1. CPU/tb/cpu_image_tb.v
+2. scripts/run_asm_test.sh
+
+```command
+scripts/run_asm_test.sh integrated_tests/test_1.s 12 8
+
+```
+
+**Arguments:**
+
+1. Assembly filename
+2. Expected dut.mem.mem[0] value
+3. Number of execution cycles
