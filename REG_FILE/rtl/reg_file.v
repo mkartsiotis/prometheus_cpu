@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module reg_file #(
     parameter BIT_LENGTH = 32,
     parameter REG_NUMBER = 32

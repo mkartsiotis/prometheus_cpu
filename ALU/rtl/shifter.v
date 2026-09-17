@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module shifter #(
     parameter BIT_LENGTH = 8
 ) (

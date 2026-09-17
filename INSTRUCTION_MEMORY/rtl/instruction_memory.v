@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module instruction_memory #(
     parameter ADDRESS_WIDTH = 8  // 2^8 = 256 words
 ) (

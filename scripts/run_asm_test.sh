@@ -3,11 +3,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCE="${1:-}"
-EXPECTED="${2:-12}"
-CYCLES="${3:-20}"
+EXPECTED="${2:-}"
 
-if [[ -z "$SOURCE" || ! -f "$ROOT/$SOURCE" ]]; then
-  printf 'usage: %s <assembly-file> [expected-mem0] [cycles]\n' "$0" >&2
+if [[ -z "$SOURCE" || -z "$EXPECTED" || ! -f "$ROOT/$SOURCE" ]]; then
+  printf 'usage: %s <assembly-file> <expected-mem0>\n' "$0" >&2
   exit 2
 fi
 
@@ -43,6 +42,8 @@ with Path(sys.argv[2]).open("w") as output:
         output.write(f"{word:08x}\n")
 PY
 
+WORDS="$(wc -l <"$BUILD/$NAME.hex")"
+
 iverilog -Wall -s cpu_image_tb -o "$BUILD/$NAME.out" \
   "$ROOT/CPU/rtl/cpu.v" \
   "$ROOT/CPU/tb/cpu_image_tb.v" \
@@ -58,7 +59,43 @@ iverilog -Wall -s cpu_image_tb -o "$BUILD/$NAME.out" \
   "$ROOT/ALU/rtl/bitwiseops.v" \
   "$ROOT/ALU/rtl/shifter.v"
 
-vvp "$BUILD/$NAME.out" \
+OUTPUT="$(vvp "$BUILD/$NAME.out" \
   "+IMAGE=$BUILD/$NAME.hex" \
   "+EXPECTED=$EXPECTED" \
-  "+CYCLES=$CYCLES"
+  "+WORDS=$WORDS")"
+
+printf '%s\n' "$OUTPUT"
+
+CYCLES="$(printf '%s\n' "$OUTPUT" |
+  sed -n 's/.*Completion marker after \([0-9][0-9]*\) cycles.*/\1/p')"
+BENCHMARK="$(printf '%s\n' "$OUTPUT" |
+  sed -n 's/^BENCHMARK_RESULT //p')"
+REPORT="$ROOT/integrated_tests/benchmark_results.tsv"
+
+if [[ ! -f "$REPORT" ]]; then
+  printf 'program\tcycles\tinstructions\tcpi\tloads\tstores\tbranches\ttaken_branches\tjumps\talu\tresult\n' >"$REPORT"
+fi
+
+if [[ -z "$BENCHMARK" ]]; then
+  printf 'benchmark result was not emitted\n' >&2
+  exit 1
+fi
+
+metric() {
+  printf '%s\n' "$BENCHMARK" |
+    tr ' ' '\n' |
+    sed -n "s/^$1=//p"
+}
+
+printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+  "$NAME" \
+  "$(metric cycles)" \
+  "$(metric instructions)" \
+  "$(metric cpi)" \
+  "$(metric loads)" \
+  "$(metric stores)" \
+  "$(metric branches)" \
+  "$(metric taken_branches)" \
+  "$(metric jumps)" \
+  "$(metric alu)" \
+  "$(metric result)" >>"$REPORT"

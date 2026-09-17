@@ -233,7 +233,7 @@ module cpu_tb;
     end else begin
       $display("[PASS] Hand-coded program image");
     end
-    $readmemh("integrated_tests/test_1.hex", dut.if_module.imem.mem);
+    $readmemh("integrated_tests/build/test_1/test_1.hex", dut.if_module.imem.mem);
     if (dut.mem.mem[0] !== 32'd12) $error("PROGRAM RESULT FAIL: %h", dut.mem.mem[0]);
     else $display("[PASS] Assembly image executed: data memory = %0d", dut.mem.mem[0]);
     $display("CPU INTEGRATION REGRESSION COMPLETED");

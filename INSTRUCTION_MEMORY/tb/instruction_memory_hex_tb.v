@@ -10,7 +10,7 @@ module instruction_memory_hex_tb;
   );
 
   initial begin
-    $readmemh("integrated_tests/test_1.hex", dut.mem);
+    $readmemh("integrated_tests/build/test_1/test_1.hex", dut.mem);
 
     address = 32'd0;
     #1;

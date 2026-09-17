@@ -334,11 +334,15 @@ All of these run from the main directory with:
 And this runs all the scripts and simulations, compiles the whole verilog rtl and checks the script outputs with their expected values.  
 Just for reference:  
 
- | Program | Expected mem[0] | RESULT |
- | --------------- | --------------- | --------------- |
- | add_sub.s | 25 | PASS |
- | logic.s | 30 | PASS |
- | memory.s | 130 | PASS |
- | branch_loop.s | 6 | PASS |
- | fibonacci.s | 34 | PASS |
- | upper_immediate.s | 411 | PASS |
+| Program         | Cycles | Instructions | CPI  | Loads | Stores | Branches | Taken Branches | Jumps | ALU | Result |
+|-----------------|-------:|-------------:|-----:|------:|-------:|---------:|---------------:|------:|----:|-------:|
+| add_sub         |      7 |            7 | 1.00 |     0 |      2 |        0 |              0 |     0 |   5 |     25 |
+| logic           |     10 |           10 | 1.00 |     0 |      2 |        0 |              0 |     0 |   8 |     30 |
+| memory          |      7 |            7 | 1.00 |     1 |      3 |        0 |              0 |     0 |   3 |    130 |
+| branch_loop     |     29 |           29 | 1.00 |     0 |      2 |       11 |              6 |     0 |  16 |      6 |
+| fibonacci       |     53 |           53 | 1.00 |     0 |      2 |       15 |              8 |     0 |  36 |     34 |
+| upper_immediate |      7 |            7 | 1.00 |     0 |      2 |        0 |              0 |     0 |   5 |   4111 |
+
+> Note that the validation was modified for benchmark testing and the results are presented in the above matrix.
+
+### Synthesis Data Metrics
