@@ -416,4 +416,4 @@ No `$dlatch` cells appear anywhere in the design hierarchy — **no inferred lat
 #### Physical constraints
 
 To overcome the high number of external input pins for the CPU module and external wrapper was created named fpga_top module.  
-At this stage of the project reaching out for guidance seems necessary so as to move into the physical word and execute targeted simulations based on specific FPGA modules.  
+At this stage of the project reaching out for guidance seems necessary so as to move into the physical world and execute targeted simulations based on specific FPGA modules.  
