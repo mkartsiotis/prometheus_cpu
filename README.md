@@ -321,3 +321,24 @@ scripts/run_asm_test.sh integrated_tests/test_1.s 12 8
 1. Assembly filename
 2. Expected dut.mem.mem[0] value
 3. Number of execution cycles
+
+#### Final Validation testing
+
+For final validation some basic testing scripts were created.  
+All of these run from the main directory with:  
+
+```command
+./scripts/final_validation.sh
+```
+
+And this runs all the scripts and simulations, compiles the whole verilog rtl and checks the script outputs with their expected values.  
+Just for reference:  
+
+ | Program | Expected mem[0] | RESULT |
+ | --------------- | --------------- | --------------- |
+ | add_sub.s | 25 | PASS |
+ | logic.s | 30 | PASS |
+ | memory.s | 130 | PASS |
+ | branch_loop.s | 6 | PASS |
+ | fibonacci.s | 34 | PASS |
+ | upper_immediate.s | 411 | PASS |
