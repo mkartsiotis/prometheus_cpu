@@ -285,4 +285,4 @@ Later they maybe merged into a single module.
 ### Full toolchain implementation
 
 For a test program called test_1:
-![Assembly to Verilog flow chart](media/assembly_to_verilog.svg)
+<img src="media/assembly_to_verilog.svg" alt="Logo" width="400">
