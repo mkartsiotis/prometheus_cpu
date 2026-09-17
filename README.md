@@ -285,4 +285,14 @@ Later they maybe merged into a single module.
 ### Full toolchain implementation
 
 For a test program called test_1:
-<img src="media/assembly_to_verilog.svg" alt="Logo" width="400">
+
+```mermaid
+flowchart TD
+    A["test_1.s<br/><sub>Assembly source</sub>"] -->|riscv64-elf-as| B["test_1.o<br/><sub>Object file</sub>"]
+    B -->|riscv64-elf-ld| C["test_1.elf<br/><sub>Linked executable</sub>"]
+    C -->|riscv64-elf-objcopy| D["test_1.bin<br/><sub>Raw binary</sub>"]
+    D -->|python packaging script| E["test_1.hex<br/><sub>Hex memory image</sub>"]
+    E -->|"$readmemh"| F["Verilog instruction memory<br/><sub>Simulation target</sub>"]
+````
+
+```
