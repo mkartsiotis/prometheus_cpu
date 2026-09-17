@@ -288,9 +288,15 @@ For a test program called test_1:
 
 ```mermaid
 flowchart TD
-    A["<div style='padding: 5px;'>test_1.s<br/><sub>Assembly source</sub></div>"] -->|riscv64-elf-as| B["<div style='padding: 5px;'>test_1.o<br/><sub>Object file</sub></div>"]
-    B -->|riscv64-elf-ld| C["<div style='padding: 5px;'>test_1.elf<br/><sub>Linked executable</sub></div>"]
-    C -->|riscv64-elf-objcopy| D["<div style='padding: 5px;'>test_1.bin<br/><sub>Raw binary</sub></div>"]
-    D -->|python packaging script| E["<div style='padding: 5px;'>test_1.hex<br/><sub>Hex memory image</sub></div>"]
-    E -->|"$readmemh"| F["<div style='padding: 5px;'>Verilog instruction memory<br/><sub>Simulation target</sub></div>"]
+    A["`test_1.s
+    Assembly source &nbsp;`"] -->|riscv64-elf-as| B["`test_1.o
+    Object file &nbsp;`"]
+    B -->|riscv64-elf-ld| C["`test_1.elf
+    Linked executable &nbsp;`"]
+    C -->|riscv64-elf-objcopy| D["`test_1.bin
+    Raw binary &nbsp;`"]
+    D -->|python packaging script| E["`test_1.hex
+    Hex memory image &nbsp;`"]
+    E -->|"\$readmemh"| F["`Verilog instruction memory
+    Simulation target &nbsp;`"]
 ```
