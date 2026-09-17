@@ -273,3 +273,29 @@ x6     = 36      # JAL link address
 x7     = 11
 PC     = 48
 ```
+
+### Memory Design Consideration
+
+At the moment instruction and data memory are different modules.  
+This choice was selected for transparency and simplicity reasons.  
+Later they maybe merged into a single module.  
+
+### Creating the Linker Script
+
+### Full toolchain implementation
+
+For a test program called test_1:
+
+```
+test_1.s
+    ↓ riscv64-elf-as
+test_1.o
+    ↓ riscv64-elf-ld
+test_1.elf
+    ↓ riscv64-elf-objcopy
+test_1.bin
+    ↓ Python packaging script
+test_1.hex
+    ↓ $readmemh
+Verilog instruction memory
+```
