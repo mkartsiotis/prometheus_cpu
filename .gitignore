@@ -1,0 +1,8 @@
+# Generated synthesis, simulation, and assembly artifacts.
+/build/
+*.out
+*.o
+*.elf
+*.bin
+*.hex
+*.vcd

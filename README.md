@@ -63,7 +63,7 @@ I am also working on discreet simulations for every part of the CPU that I am bu
 5. For shift operations only a small portion of the second inputs is used as it is the case with most RISC processors.  
 > Pending: ALU simulation with the synthesized system and benchmark grading.  
 
- ![Synthesized ALU mmdule](https://github.com/mkartsiotis/zeus_tpu/blob/main/ALU/synth/AluFull.png)
+ ![Synthesized ALU module](https://github.com/mkartsiotis/prometheus_cpu/blob/main/rtl/ALU/synth/AluFull.png)
 
 | Metric | Value | Details / Notes |
 | :--- | :--- | :--- |
@@ -294,11 +294,11 @@ flowchart TD
 
 The complete simulation is conducted using 2 programs:
 
-1. CPU/tb/cpu_image_tb.v
-2. scripts/run_asm_test.sh
+1. rtl/CPU/tb/cpu_image_tb.v
+2. tools/run_tests/run_asm_test.sh
 
 ```command
-scripts/run_asm_test.sh integrated_tests/test_1.s 12 8
+tools/run_tests/run_asm_test.sh programs/asm/test_1.s 12
 
 ```
 
@@ -306,7 +306,9 @@ scripts/run_asm_test.sh integrated_tests/test_1.s 12 8
 
 1. Assembly filename
 2. Expected dut.mem.mem[0] value
-3. Number of execution cycles
+
+Execution cycles and instruction metrics are measured automatically by the
+image testbench and written to `results/benchmark_results.tsv`.
 
 #### Final Validation testing
 
@@ -314,7 +316,7 @@ For final validation some basic testing scripts were created.
 All of these run from the main directory with:  
 
 ```command
-./scripts/final_validation.sh
+./tools/run_tests/final_validation.sh
 ```
 
 And this runs all the scripts and simulations, compiles the whole verilog rtl and checks the script outputs with their expected values.  
