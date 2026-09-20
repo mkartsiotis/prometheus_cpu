@@ -422,6 +422,6 @@ At this stage of the project reaching out for guidance seems necessary so as to 
 
 ### Next steps
 
-[Context: "1. FIRST"]
-2. second
-3. third
+1. Connect the CPU to gcc and run tests
+2. Try and run intial tests on FPGA's via online ssh connection
+3. Create a 5 stage pipeline and push changes via simulations
