@@ -1,7 +1,5 @@
 int main(void) {
-  int sum = 0;
-
-  for (int i = 1; i <= 10; i++)
-    sum += i;
-  return sum;
+  int a = 10;
+  int b = 15;
+  return a + b;
 }
