@@ -93,7 +93,21 @@ module cpu #(
   );
   wire should_branch;
   wire [31:0] pc_plus_4, branch_target, jal_target, jalr_target;
-  assign should_branch = Branch_wire && zero_wire;
+  reg branch_condition;
+
+  always @(*) begin
+    case (fetched_instruction[14:12])
+      3'b000: branch_condition = zero_wire;                    // BEQ
+      3'b001: branch_condition = ~zero_wire;                   // BNE
+      3'b100: branch_condition = $signed(reg1_data_wire) < $signed(reg2_data_wire); // BLT
+      3'b101: branch_condition = $signed(reg1_data_wire) >= $signed(reg2_data_wire); // BGE
+      3'b110: branch_condition = reg1_data_wire < reg2_data_wire; // BLTU
+      3'b111: branch_condition = reg1_data_wire >= reg2_data_wire; // BGEU
+      default: branch_condition = 1'b0;
+    endcase
+  end
+
+  assign should_branch = Branch_wire && branch_condition;
   // Program Counter Datapath and Connection
   assign pc_plus_4     = pc_wire + 4;
   assign branch_target = pc_wire + immediate_wire;
