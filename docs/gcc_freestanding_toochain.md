@@ -21,7 +21,8 @@ Specifically:
 
 ### Verilog testbench module creation
 
-The testbench module accepts the following arguments:
+The testbench module accepts the following arguments:  
+
 `+INSTRUCTION_IMAGE=` : Instruction image path(hex file)  
 `+DATA_IMAGE=` : Data image path(hex file)  
 `+INSTRUCTION_WORDS=` : Instruction word count(for memory instantiation)  
