@@ -38,6 +38,12 @@ vvp "build/c/return_value/return_value.out" \
 PROGRAM_RESULT result=25 status=1 cycles=21
 ```
 
+From this output we can notice that:  
+
+- result = program main return value  
+- status = completion status(0: in progress, 1: success, 2: fail)  
+- cycles = number of cycles that took to run the program  
+
 ## Inital steps for building the basic skills  
 
 ### Step 1
