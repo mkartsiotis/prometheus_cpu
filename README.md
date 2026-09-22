@@ -16,6 +16,27 @@ make run PROGRAM=path/to/program.c
 ```
 
 > Note that it is best for the program to be inside the main project directory.
+>
+### Results
+
+After running the command you will get an output of this form:  
+
+```command
+❯ cd /home/michael/Future/prometheus_cpu
+❯ make run PROGRAM=programs/c/return_value.c
+vvp "build/c/return_value/return_value.out" \
+ "+INSTRUCTION_IMAGE=build/c/return_value/return_value.text.hex" \
+ "+DATA_IMAGE=build/c/return_value/return_value.data.hex" \
+ "+INSTRUCTION_WORDS=$(wc -l < "build/c/return_value/return_value.text.hex")" \
+ "+DATA_WORDS=$(wc -l < "build/c/return_value/return_value.data.hex")"
+[PASS] Instruction memory initialized
+[PASS] Data memory initialized
+        result mailbox: dut.mem.mem[0]
+        status mailbox: dut.mem.mem[1]
+        data image base: dut.mem.mem[2]
+[PASS] Program completed
+PROGRAM_RESULT result=25 status=1 cycles=21
+```
 
 ## Inital steps for building the basic skills  
 
