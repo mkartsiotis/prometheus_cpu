@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 
-module cpu (
+module cpu #(
+    parameter DATA_ADDRESS_WIDTH = 12
+) (
     input clk,
     reset,
     output [31:0] pc,
@@ -36,7 +38,9 @@ module cpu (
   reg [31:0] alu_second_input_reg, alu_first_input_reg, wb_reg, next_pc;
   wire [31:0] mem_address_wire, mem_write_data_wire, mem_output_data_wire;
   wire mem_read_wire, mem_write_wire;
-  memory mem (
+  memory #(
+      .ADDRESS_WIDTH(DATA_ADDRESS_WIDTH)
+  ) mem (
       .clk(clk),
       .address(mem_address_wire),
       .write_data(mem_write_data_wire),
