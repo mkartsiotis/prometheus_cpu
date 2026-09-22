@@ -460,7 +460,7 @@ At this stage of the project reaching out for guidance seems necessary so as to 
 ## Freestanding C
 
 Freestanding C datapath was completed!
-See the relevant documentation for more information.
+See the relevant documentation for more information.  
 **[C to assembly toolchain](/docs/gcc_freestanding_toochain.md)**
 
 ### Next steps
