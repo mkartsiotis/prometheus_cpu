@@ -7,6 +7,43 @@ All of these led to the decision of creating a tpu based on verilog as a persona
 
 So this is essentially a baseline repository validating Verilog workflows on a CPU before moving on to creating a custom instruction extension and an acceleration module in the future.
 
+## How to run the CPU
+
+To run simple freestanding C programs in the CPU use the following makefile command:
+
+```command
+make run PROGRAM=path/to/program.c
+```
+
+> Note that it is best for the program to be inside the main project directory.
+>
+### Results
+
+After running the command you will get an output of this form:  
+
+```command
+❯ cd /home/michael/Future/prometheus_cpu
+❯ make run PROGRAM=programs/c/return_value.c
+vvp "build/c/return_value/return_value.out" \
+ "+INSTRUCTION_IMAGE=build/c/return_value/return_value.text.hex" \
+ "+DATA_IMAGE=build/c/return_value/return_value.data.hex" \
+ "+INSTRUCTION_WORDS=$(wc -l < "build/c/return_value/return_value.text.hex")" \
+ "+DATA_WORDS=$(wc -l < "build/c/return_value/return_value.data.hex")"
+[PASS] Instruction memory initialized
+[PASS] Data memory initialized
+        result mailbox: dut.mem.mem[0]
+        status mailbox: dut.mem.mem[1]
+        data image base: dut.mem.mem[2]
+[PASS] Program completed
+PROGRAM_RESULT result=25 status=1 cycles=21
+```
+
+From this output we can notice that:  
+
+- result = program main return value  
+- status = completion status(0: in progress, 1: success, 2: fail)  
+- cycles = number of cycles that took to run the program  
+
 ## Inital steps for building the basic skills  
 
 ### Step 1
@@ -63,7 +100,7 @@ I am also working on discreet simulations for every part of the CPU that I am bu
 5. For shift operations only a small portion of the second inputs is used as it is the case with most RISC processors.  
 > Pending: ALU simulation with the synthesized system and benchmark grading.  
 
- ![Synthesized ALU mmdule](https://github.com/mkartsiotis/zeus_tpu/blob/main/ALU/synth/AluFull.png)
+ ![Synthesized ALU module](https://github.com/mkartsiotis/prometheus_cpu/blob/main/rtl/ALU/synth/AluFull.png)
 
 | Metric | Value | Details / Notes |
 | :--- | :--- | :--- |
@@ -294,11 +331,11 @@ flowchart TD
 
 The complete simulation is conducted using 2 programs:
 
-1. CPU/tb/cpu_image_tb.v
-2. scripts/run_asm_test.sh
+1. rtl/CPU/tb/cpu_image_tb.v
+2. tools/run_tests/run_asm_test.sh
 
 ```command
-scripts/run_asm_test.sh integrated_tests/test_1.s 12 8
+tools/run_tests/run_asm_test.sh programs/asm/test_1.s 12
 
 ```
 
@@ -306,7 +343,9 @@ scripts/run_asm_test.sh integrated_tests/test_1.s 12 8
 
 1. Assembly filename
 2. Expected dut.mem.mem[0] value
-3. Number of execution cycles
+
+Execution cycles and instruction metrics are measured automatically by the
+image testbench and written to `results/benchmark_results.tsv`.
 
 #### Final Validation testing
 
@@ -314,7 +353,7 @@ For final validation some basic testing scripts were created.
 All of these run from the main directory with:  
 
 ```command
-./scripts/final_validation.sh
+./tools/run_tests/final_validation.sh
 ```
 
 And this runs all the scripts and simulations, compiles the whole verilog rtl and checks the script outputs with their expected values.  
@@ -416,4 +455,16 @@ No `$dlatch` cells appear anywhere in the design hierarchy — **no inferred lat
 #### Physical constraints
 
 To overcome the high number of external input pins for the CPU module and external wrapper was created named fpga_top module.  
-At this stage of the project reaching out for guidance seems necessary so as to move into the physical world and execute targeted simulations based on specific FPGA modules.  
+At this stage of the project reaching out for guidance seems necessary so as to move into the physical world and execute targeted simulations based on specific FPGA modules.
+
+## Freestanding C
+
+Freestanding C datapath was completed!
+See the relevant documentation for more information.  
+**[C to assembly toolchain](/docs/gcc_freestanding_toochain.md)**
+
+### Next steps
+
+1. Connect the CPU to gcc and run tests
+2. Try and run intial tests on FPGA's via online ssh connection
+3. Create a 5 stage pipeline and push changes via simulations
