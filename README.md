@@ -7,6 +7,16 @@ All of these led to the decision of creating a tpu based on verilog as a persona
 
 So this is essentially a baseline repository validating Verilog workflows on a CPU before moving on to creating a custom instruction extension and an acceleration module in the future.
 
+## How to run the CPU
+
+To run simple freestanding C programs in the CPU use the following makefile command:
+
+```command
+make run PROGRAM=path/to/program.c
+```
+
+> Note that it is best for the program to be inside the main project directory.
+
 ## Inital steps for building the basic skills  
 
 ### Step 1
@@ -419,6 +429,11 @@ No `$dlatch` cells appear anywhere in the design hierarchy — **no inferred lat
 
 To overcome the high number of external input pins for the CPU module and external wrapper was created named fpga_top module.  
 At this stage of the project reaching out for guidance seems necessary so as to move into the physical world and execute targeted simulations based on specific FPGA modules.
+
+## Freestanding C
+
+Freestanding C datapath was completed!
+See for more information.
 
 ### Next steps
 
