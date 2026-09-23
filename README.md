@@ -457,11 +457,20 @@ No `$dlatch` cells appear anywhere in the design hierarchy — **no inferred lat
 To overcome the high number of external input pins for the CPU module and external wrapper was created named fpga_top module.  
 At this stage of the project reaching out for guidance seems necessary so as to move into the physical world and execute targeted simulations based on specific FPGA modules.
 
-## Freestanding C
+### Freestanding C
 
 Freestanding C datapath was completed!
 See the relevant documentation for more information.  
 **[C to assembly toolchain](/docs/gcc_freestanding_toochain.md)**
+
+### Running GCC Torture  
+
+#### Issues
+
+##### The Load-Store issue  
+
+By initial designed it was decided that the memory should be strictly aligned. This is a problem for C as C uses byte-addressing especially for memory functions that are required to run the gcc-torture suite.  
+So we need to take some steps back into the RTL and memory architecture, change the word select signals(for both read and write) from word-relative to byte-relative and modify the control unit accordingly.  
 
 ### Next steps
 
