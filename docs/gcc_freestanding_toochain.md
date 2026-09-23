@@ -105,3 +105,15 @@ The successful simulator output has the form:
 ```text
 PROGRAM_RESULT result=25 status=1 cycles=21
 ```
+
+## Completing calls for GCC-TORTURE TESTING
+
+We need to implement some runtime functions so as to be able to run the gcc-torture suite and validate the CPU completely.  
+Specifically:
+
+- exit  
+- abort  
+- memory functions(memcpy, memmove, memset, memcmp)  
+
+Basic exit and abort functions will be implemented in the ![runtime.c](../programs/runtime/runtime.c) file.  
+The mechanism is easy since we have already reserved an address(mem[1]) for the status. So we just need some code to turn that to 1 (exit(0)) or 2(abort(), exit(1)) to indicate failure.  

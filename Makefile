@@ -15,6 +15,7 @@ BUILD        := build/c/$(PROGRAM_NAME)
 C_SOURCE := $(PROGRAM)
 
 CRT0     := programs/runtime/crt0.S
+RUNTIME  := programs/runtime/runtime.c
 LINKER   := programs/linker/linker.ld
 
 TEXT_BIN  := $(BUILD)/$(PROGRAM_NAME).text.bin
@@ -42,9 +43,13 @@ $(BUILD)/$(PROGRAM_NAME).o: $(C_SOURCE) | $(BUILD)
 $(BUILD)/crt0.o: $(CRT0) | $(BUILD)
 	$(AS) -march=rv32i -mabi=ilp32 "$<" -o "$@"
 
-$(ELF): $(BUILD)/$(PROGRAM_NAME).o $(BUILD)/crt0.o $(LINKER)
+$(BUILD)/runtime.o: $(RUNTIME) | $(BUILD)
+	$(CC) -march=rv32i -mabi=ilp32 -ffreestanding -nostdlib \
+		-nostartfiles -O0 -c "$<" -o "$@"
+
+$(ELF): $(BUILD)/$(PROGRAM_NAME).o $(BUILD)/crt0.o $(BUILD)/runtime.o $(LINKER)
 	$(LD) -m elf32lriscv -T "$(LINKER)" -o "$@" \
-		$(BUILD)/crt0.o $(BUILD)/$(PROGRAM_NAME).o
+		$(BUILD)/crt0.o $(BUILD)/runtime.o $(BUILD)/$(PROGRAM_NAME).o
 
 $(TEXT_BIN): $(ELF)
 	$(OBJCOPY) -O binary -j .text "$<" "$@"

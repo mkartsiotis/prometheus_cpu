@@ -19,13 +19,7 @@ _start:
 .Lcall_main:
     # Call the C entry point.
     jal ra, main
-
-    # main returns its integer result in a0.
-    sw a0, 0(zero)
-
-    # Mark successful completion.
-    addi t0, zero, 1
-    sw t0, 4(zero)
+    jal ra, runtime_finish
 
 .Lhalt:
     jal zero, .Lhalt
