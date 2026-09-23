@@ -469,8 +469,8 @@ See the relevant documentation for more information.
 
 ##### The Load-Store issue  
 
-By initial designed it was decided that the memory should be strictly aligned. This is a problem for C as C uses byte-addressing especially for memory functions that are required to run the gcc-torture suite.  
-So we need to take some steps back into the RTL and memory architecture, change the word select signals(for both read and write) from word-relative to byte-relative and modify the control unit accordingly.  
+By initial design it was decided that the memory should be strictly aligned. This is a problem for C as C uses byte-addressing especially for memory functions that are required to run the gcc-torture suite.  
+So we need to take some steps back into the RTL and memory architecture, change the memory enable signals(for both read and write) from word-relative to byte-relative and modify the control unit accordingly.  
 
 ### Next steps
 
