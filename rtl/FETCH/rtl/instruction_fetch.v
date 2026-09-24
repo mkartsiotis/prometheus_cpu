@@ -13,7 +13,9 @@ module instruction_fetch (
       .pc_in(pc_input),
       .pc_out(pc_out)
   );
-  instruction_memory imem (
+  instruction_memory #(
+      .ADDRESS_WIDTH(15)
+  ) imem (
       .address(pc_out),
       .instruction_out(instruction_out)
   );

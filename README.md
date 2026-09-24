@@ -463,15 +463,31 @@ Freestanding C datapath was completed!
 See the relevant documentation for more information.  
 **[C to assembly toolchain](/docs/gcc_freestanding_toochain.md)**
 
-### Running GCC Torture  
+## Running GCC Torture  
 
-#### Issues
+### Issues
 
-##### The Load-Store issue  
+#### The Load-Store issue  
+
+##### Overview
 
 By initial design it was decided that the memory should be strictly aligned. This is a problem for C as C uses byte-addressing especially for memory functions that are required to run the gcc-torture suite.  
 So we need to take some steps back into the RTL and memory architecture, change the memory enable signals(for both read and write) from word-relative to byte-relative and modify the control unit accordingly.  
 
+##### Fix 1: Memory module fix  
+
+We will add new signals on the write and read and add that functionality.  
+
+| Signal Select | Selected Field |
+| --------------- | --------------- |
+| `000` | Word |
+| `001` | Half |
+| `010` | Byte |
+| `101` | Half Unsigned(for lhu) |
+| `110` | Byte Unsigned(for lbu) |
+
+> Note: Memory design and select are little endian logic!
+>
 ### Next steps
 
 1. Connect the CPU to gcc and run tests

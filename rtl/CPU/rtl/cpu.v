@@ -38,6 +38,7 @@ module cpu #(
   reg [31:0] alu_second_input_reg, alu_first_input_reg, wb_reg, next_pc;
   wire [31:0] mem_address_wire, mem_write_data_wire, mem_output_data_wire;
   wire mem_read_wire, mem_write_wire;
+  wire [2:0] mem_size_wire;  // This is for lb, sb etc
   memory #(
       .ADDRESS_WIDTH(DATA_ADDRESS_WIDTH)
   ) mem (
@@ -46,6 +47,7 @@ module cpu #(
       .write_data(mem_write_data_wire),
       .mem_write(mem_write_wire),
       .mem_read(mem_read_wire),
+      .mem_size(mem_size_wire),
       .read_data(mem_output_data_wire)
   );
   instruction_fetch if_module (
@@ -70,7 +72,8 @@ module cpu #(
       .ResultSrc(ResultSrc_wire),
       .ALUSrc(ALUSrc_wire),
       .ALUop(ALUop_wire),
-      .RegWrite(reg_write_wire)
+      .RegWrite(reg_write_wire),
+      .mem_sel(mem_size_wire)
   );
   reg_file register_file (
       .clk(clk),
@@ -97,12 +100,12 @@ module cpu #(
 
   always @(*) begin
     case (fetched_instruction[14:12])
-      3'b000: branch_condition = zero_wire;                    // BEQ
-      3'b001: branch_condition = ~zero_wire;                   // BNE
-      3'b100: branch_condition = $signed(reg1_data_wire) < $signed(reg2_data_wire); // BLT
-      3'b101: branch_condition = $signed(reg1_data_wire) >= $signed(reg2_data_wire); // BGE
-      3'b110: branch_condition = reg1_data_wire < reg2_data_wire; // BLTU
-      3'b111: branch_condition = reg1_data_wire >= reg2_data_wire; // BGEU
+      3'b000:  branch_condition = zero_wire;  // BEQ
+      3'b001:  branch_condition = ~zero_wire;  // BNE
+      3'b100:  branch_condition = $signed(reg1_data_wire) < $signed(reg2_data_wire);  // BLT
+      3'b101:  branch_condition = $signed(reg1_data_wire) >= $signed(reg2_data_wire);  // BGE
+      3'b110:  branch_condition = reg1_data_wire < reg2_data_wire;  // BLTU
+      3'b111:  branch_condition = reg1_data_wire >= reg2_data_wire;  // BGEU
       default: branch_condition = 1'b0;
     endcase
   end

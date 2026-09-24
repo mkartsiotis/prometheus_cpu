@@ -12,6 +12,7 @@ module control_unit_tb;
   wire [ 1:0] ResultSrc;
   wire [ 1:0] ALUSrc;
   wire [ 3:0] ALUop;
+  wire [ 2:0] mem_sel;
 
   // Instantiate the Control Unit module
   control_unit uut (
@@ -24,7 +25,8 @@ module control_unit_tb;
       .Exception  (Exception),
       .ResultSrc  (ResultSrc),
       .ALUSrc     (ALUSrc),
-      .ALUop      (ALUop)
+      .ALUop      (ALUop),
+      .mem_sel    (mem_sel)
   );
 
   // Helper task to check outputs against expected values
@@ -51,6 +53,22 @@ module control_unit_tb;
                  exp_RegWrite, exp_MemRead, exp_MemWrite, exp_Branch, exp_Jump, exp_Exception,
                  exp_ResultSrc, exp_ALUSrc, exp_ALUop);
       end
+    end
+  endtask
+
+  task check_mem_sel;
+    input [255:0] test_name;
+    input [31:0] test_instruction;
+    input [2:0] expected_mem_sel;
+    begin
+      instruction = test_instruction;
+      #1;
+      if (mem_sel !== expected_mem_sel) begin
+        $display("[FAIL] %s: got mem_sel=%b expected=%b", test_name, mem_sel,
+                 expected_mem_sel);
+        $fatal(1);
+      end
+      $display("[PASS] %s: mem_sel=%b", test_name, mem_sel);
     end
   endtask
 
@@ -92,6 +110,15 @@ module control_unit_tb;
     // 9. ECALL / System Exception
     instruction = 32'h00000073;
     check_outputs("SYSTEM ECALL", 1'b0, 1'b0, 1'b0, 1'b0, 2'b00, 1'b1, 2'b00, 2'b00, 4'b0000);
+
+    check_mem_sel("LOAD LB", 32'h00000003, 3'b010);
+    check_mem_sel("LOAD LH", 32'h00001003, 3'b001);
+    check_mem_sel("LOAD LW", 32'h00002003, 3'b000);
+    check_mem_sel("LOAD LBU", 32'h00004003, 3'b110);
+    check_mem_sel("LOAD LHU", 32'h00005003, 3'b101);
+    check_mem_sel("STORE SB", 32'h00000023, 3'b010);
+    check_mem_sel("STORE SH", 32'h00001023, 3'b001);
+    check_mem_sel("STORE SW", 32'h00002023, 3'b000);
 
     $display("--- Verification Complete ---");
     $finish;

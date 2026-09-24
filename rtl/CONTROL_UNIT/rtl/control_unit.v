@@ -11,7 +11,8 @@ module control_unit (
     output reg [1:0] ResultSrc,
     ALUSrc,
     Jump,
-    output reg [3:0] ALUop
+    output reg [3:0] ALUop,
+    output reg [2:0] mem_sel
 );
   always @(*) begin
     case (instruction[6:0])
@@ -24,6 +25,7 @@ module control_unit (
         Branch = 1'b0;
         Jump = 2'b00;
         Exception = 1'b0;
+        mem_sel = 3'b000;
         case (instruction[14:12])
           3'b000:  ALUop = 4'b0000;
           3'b100:  ALUop = 4'b0101;
@@ -46,6 +48,15 @@ module control_unit (
         Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b0000;
+        mem_sel = 3'b000;
+        case (instruction[14:12])
+          3'b000:  mem_sel = 3'b010;  // lb
+          3'b001:  mem_sel = 3'b001;  // lh
+          3'b010:  mem_sel = 3'b000;  // lw
+          3'b100:  mem_sel = 3'b110;  // lbu
+          3'b101:  mem_sel = 3'b101;  // lhu
+          default: mem_sel = 3'b000;
+        endcase
       end
       7'b0100011: begin  // S
         RegWrite = 1'b0;
@@ -57,6 +68,12 @@ module control_unit (
         Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b0000;
+        case (instruction[14:12])
+          3'b000:  mem_sel = 3'b010;  // sb
+          3'b001:  mem_sel = 3'b001;  // sh
+          3'b010:  mem_sel = 3'b000;  // sw
+          default: mem_sel = 3'b000;
+        endcase
       end
       7'b1100011: begin  // B
         RegWrite = 1'b0;
@@ -68,6 +85,7 @@ module control_unit (
         Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b0001;
+        mem_sel = 3'b000;
       end
       7'b1101111: begin  // J
         RegWrite = 1'b1;
@@ -79,6 +97,7 @@ module control_unit (
         Jump = 2'b01;
         Exception = 1'b0;
         ALUop = 4'b0000;
+        mem_sel = 3'b000;
       end
       7'b1100111: begin  // Jalr
         RegWrite = 1'b1;
@@ -90,7 +109,7 @@ module control_unit (
         Jump = 2'b10;
         Exception = 1'b0;
         ALUop = 4'b0000;
-
+        mem_sel = 3'b000;
       end
       7'b0110111: begin  // U - Type
         RegWrite = 1'b1;
@@ -102,6 +121,7 @@ module control_unit (
         Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b1011;
+        mem_sel = 3'b000;
       end
       7'b0010111: begin  // AUIPC
         RegWrite = 1'b1;
@@ -113,6 +133,7 @@ module control_unit (
         Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b0000;
+        mem_sel = 3'b000;
       end
       7'b0110011: begin  // R-type
         RegWrite = 1'b1;
@@ -137,6 +158,7 @@ module control_unit (
           10'b0110000000: ALUop = 4'b0111;
           default: ALUop = 4'b0000;
         endcase
+        mem_sel = 3'b000;
       end
       7'b1110011: begin
         RegWrite = 1'b0;
@@ -148,6 +170,7 @@ module control_unit (
         Jump = 2'b00;
         Exception = 1'b1;
         ALUop = 4'b0000;
+        mem_sel = 3'b000;
       end
       default: begin
         RegWrite = 1'b0;
@@ -159,6 +182,7 @@ module control_unit (
         Jump = 2'b00;
         Exception = 1'b0;
         ALUop = 4'b0000;
+        mem_sel = 3'b000;
       end
     endcase
     // AUIPC integration and ALU_A_SRC definition
