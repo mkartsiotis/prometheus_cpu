@@ -13,6 +13,7 @@ PROGRAM ?= programs/c/return_value.c
 PROGRAM_NAME := $(basename $(notdir $(PROGRAM)))
 BUILD        := build/c/$(PROGRAM_NAME)
 C_SOURCE := $(PROGRAM)
+C_STANDARD ?=
 
 CRT0     := programs/runtime/crt0.S
 RUNTIME  := programs/runtime/runtime.c
@@ -31,20 +32,21 @@ help:
 		'Targets:' \
 		'  make help    Show this help' \
 		'  make run PROGRAM=/path/to/test.c    Build and run the C program' \
+		'                Optional: C_STANDARD=gnu17 to select a C language standard' \
 		'  make clean   Remove generated build artifacts'
 
 $(BUILD):
 	mkdir -p "$@"
 
 $(BUILD)/$(PROGRAM_NAME).o: $(C_SOURCE) | $(BUILD)
-	$(CC) -march=rv32i -mabi=ilp32 -ffreestanding -nostdlib \
+	$(CC) $(if $(C_STANDARD),-std=$(C_STANDARD)) -march=rv32i -mabi=ilp32 -ffreestanding -nostdlib \
 		-nostartfiles -O0 -c "$<" -o "$@"
 
 $(BUILD)/crt0.o: $(CRT0) | $(BUILD)
 	$(AS) -march=rv32i -mabi=ilp32 "$<" -o "$@"
 
 $(BUILD)/runtime.o: $(RUNTIME) | $(BUILD)
-	$(CC) -march=rv32i -mabi=ilp32 -ffreestanding -nostdlib \
+	$(CC) $(if $(C_STANDARD),-std=$(C_STANDARD)) -march=rv32i -mabi=ilp32 -ffreestanding -nostdlib \
 		-nostartfiles -O0 -c "$<" -o "$@"
 
 $(ELF): $(BUILD)/$(PROGRAM_NAME).o $(BUILD)/crt0.o $(BUILD)/runtime.o $(LINKER)

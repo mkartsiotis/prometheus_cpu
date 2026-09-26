@@ -140,6 +140,8 @@ module cpu_tb;
       $error("LOAD FETCH FAIL: PC=%h instruction=%h", pc, instruction_out);
     if (dut.mem_read !== 1'b1 || dut.mem_write !== 1'b0)
       $error("LOAD CONTROL FAIL: MemRead=%b MemWrite=%b", dut.mem_read, dut.mem_write);
+    if (dut.mem_size_wire !== 3'b000)
+      $error("LW SIZE CONTROL FAIL: mem_size=%b", dut.mem_size_wire);
 
     @(posedge clk);
     #1;
@@ -147,6 +149,43 @@ module cpu_tb;
       $error("LOAD WRITE-BACK FAIL: x6=%h", dut.register_file.regfile[6]);
 
     $display("[PASS] Arithmetic, upper-immediate, and memory integration");
+
+    // Byte and halfword memory-control integration.
+    dut.if_module.imem.mem[0] = 32'h0000_0083;  // lb x1, 0(x0)
+    dut.if_module.imem.mem[1] = 32'h0000_1103;  // lh x2, 0(x0)
+    dut.if_module.imem.mem[2] = 32'h0000_4183;  // lbu x3, 0(x0)
+    dut.if_module.imem.mem[3] = 32'h0000_5203;  // lhu x4, 0(x0)
+    dut.if_module.imem.mem[4] = 32'h0010_0023;  // sb x1, 0(x0)
+    dut.if_module.imem.mem[5] = 32'h0020_1123;  // sh x2, 2(x0)
+    reset = 1;
+    @(posedge clk);
+    #1;
+    reset = 0;
+
+    #1;
+    if (dut.mem_size_wire !== 3'b010 || dut.mem_read !== 1'b1)
+      $error("LB CONTROL FAIL: mem_size=%b MemRead=%b", dut.mem_size_wire, dut.mem_read);
+    @(posedge clk);
+    #1;
+    if (dut.mem_size_wire !== 3'b001 || dut.mem_read !== 1'b1)
+      $error("LH CONTROL FAIL: mem_size=%b MemRead=%b", dut.mem_size_wire, dut.mem_read);
+    @(posedge clk);
+    #1;
+    if (dut.mem_size_wire !== 3'b110 || dut.mem_read !== 1'b1)
+      $error("LBU CONTROL FAIL: mem_size=%b MemRead=%b", dut.mem_size_wire, dut.mem_read);
+    @(posedge clk);
+    #1;
+    if (dut.mem_size_wire !== 3'b101 || dut.mem_read !== 1'b1)
+      $error("LHU CONTROL FAIL: mem_size=%b MemRead=%b", dut.mem_size_wire, dut.mem_read);
+    @(posedge clk);
+    #1;
+    if (dut.mem_size_wire !== 3'b010 || dut.mem_write !== 1'b1)
+      $error("SB CONTROL FAIL: mem_size=%b MemWrite=%b", dut.mem_size_wire, dut.mem_write);
+    @(posedge clk);
+    #1;
+    if (dut.mem_size_wire !== 3'b001 || dut.mem_write !== 1'b1)
+      $error("SH CONTROL FAIL: mem_size=%b MemWrite=%b", dut.mem_size_wire, dut.mem_write);
+    $display("[PASS] Byte and halfword memory-control integration");
 
     // Control-flow integration: taken BEQ skips PC+4 instruction.
     dut.if_module.imem.mem[0] = 32'h0050_0093;  // addi x1, x0, 5
