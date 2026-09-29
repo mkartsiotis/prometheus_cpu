@@ -3,6 +3,7 @@
 module instruction_fetch_tb;
   reg clk;
   reg reset;
+  reg stop_pc;
   reg [31:0] pc_input;
 
   wire [31:0] instruction_out;
@@ -11,6 +12,7 @@ module instruction_fetch_tb;
   instruction_fetch dut (
       .clk            (clk),
       .reset          (reset),
+      .stop_pc        (stop_pc),
       .pc_input       (pc_input),
       .instruction_out(instruction_out),
       .pc_out         (pc_out)
@@ -28,6 +30,7 @@ module instruction_fetch_tb;
     dut.imem.mem[3] = 32'h4444_4444;
 
     reset = 1;
+    stop_pc = 0;
     pc_input = 32'd0;
 
     @(posedge clk);
@@ -54,6 +57,14 @@ module instruction_fetch_tb;
     #1;
     if (pc_out !== 32'd12 || instruction_out !== 32'h4444_4444)
       $error("FETCH 3 FAIL: PC=%h instruction=%h", pc_out, instruction_out);
+
+    // stall: PC and fetched instruction must hold
+    stop_pc = 1;
+    pc_input = 32'd0;
+    @(posedge clk);
+    #1;
+    if (pc_out !== 32'd12 || instruction_out !== 32'h4444_4444)
+      $error("FETCH STALL FAIL: PC=%h instruction=%h", pc_out, instruction_out);
 
     $display("INSTRUCTION FETCH TESTS COMPLETED");
     $finish;

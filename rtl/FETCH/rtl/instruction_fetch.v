@@ -3,12 +3,14 @@
 module instruction_fetch (
     input clk,
     reset,
+    stop_pc,
     input [31:0] pc_input,
     output [31:0] instruction_out,
     pc_out
 );
   pc p_counter (
       .clk(clk),
+      .stop_pc(stop_pc),
       .reset(reset),
       .pc_in(pc_input),
       .pc_out(pc_out)
