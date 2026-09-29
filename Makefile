@@ -67,6 +67,10 @@ $(DATA_HEX): $(DATA_BIN)
 
 $(BUILD)/$(PROGRAM_NAME).out: \
 		rtl/CPU/rtl/cpu.v rtl/FETCH/rtl/instruction_fetch.v \
+		rtl/PIPELINE_REGS/if_id_reg.v rtl/PIPELINE_REGS/id_ex_reg.v \
+		rtl/PIPELINE_REGS/ex_mem_reg.v rtl/PIPELINE_REGS/mem_wb_reg.v \
+		rtl/FORWARDING_UNIT/rtl/forwarding_unit.v \
+		rtl/HAZARD_DETECTION_UNIT/rtl/hazard_detection_unit.v \
 		rtl/PC/rtl/pc.v rtl/INSTRUCTION_MEMORY/rtl/instruction_memory.v \
 		rtl/IMMEDIATE_GENERATOR/rtl/immediate_generator.v \
 		rtl/CONTROL_UNIT/rtl/control_unit.v rtl/REG_FILE/rtl/reg_file.v \
