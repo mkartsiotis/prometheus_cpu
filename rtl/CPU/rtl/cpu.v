@@ -28,8 +28,12 @@ module cpu #(
 );
   wire [31:0] fetched_instruction, fetched_instruction_pre_id;
   wire [31:0] immediate_wire;
+  reg [31:0] alu_first_input_wire, alu_second_input_wire;  // forwarded rs1 / rs2
+  wire [31:0] ex_mem_forward_value;
+  wire [2:0] id_ex_funct3_wire;
+  wire branch_taken_wire;
   wire zero_wire, reg_write_wire, wb_enable_wire, AluA_Src_wire, Branch_wire;
-  wire exception_wire;
+  wire exception_wire, stall_pc_wire;
   wire [3:0] ALUop_wire;
   wire [1:0] ResultSrc_wire, ALUSrc_wire, Jump_wire;
   wire [31:0] reg1_data_wire, reg2_data_wire;
@@ -53,6 +57,7 @@ module cpu #(
   wire [3:0] id_ex_alu_op_wire;
   wire [2:0] id_ex_mem_size_wire, ex_mem_mem_size_wire;
   wire [2:0] mem_size_wire;  // This is for lb, sb etc
+  wire [1:0] forward_a_wire, forward_b_wire;
   memory #(
       .ADDRESS_WIDTH(DATA_ADDRESS_WIDTH)
   ) mem (
@@ -67,6 +72,7 @@ module cpu #(
   instruction_fetch if_module (
       .clk(clk),
       .reset(reset),
+      .stop_pc(stall_pc_wire),
       .pc_input(next_pc_wire),
       .instruction_out(fetched_instruction),
       .pc_out(pc_wire)
@@ -132,6 +138,7 @@ module cpu #(
       .rs1_in(fetched_instruction_pre_id[19:15]),
       .rs2_in(fetched_instruction_pre_id[24:20]),
       .rd_in(fetched_instruction_pre_id[11:7]),
+      .funct3_in(fetched_instruction_pre_id[14:12]),
       .RegWrite_in(reg_write_wire),
       .MemRead_in(mem_read_wire),
       .MemWrite_in(mem_write_wire),
@@ -150,6 +157,7 @@ module cpu #(
       .rs1_out(id_ex_rs1_wire),
       .rs2_out(id_ex_rs2_wire),
       .rd_out(id_ex_rd_wire),
+      .funct3_out(id_ex_funct3_wire),
       .RegWrite_out(id_ex_reg_write_wire),
       .MemRead_out(id_ex_mem_read_wire),
       .MemWrite_out(id_ex_mem_write_wire),
@@ -169,7 +177,7 @@ module cpu #(
       .alu_result_in(alu_result_wire),
       .pc_in(id_ex_pc_wire),
       .rd_in(id_ex_rd_wire),
-      .store_data_in(id_ex_reg2_data_wire),
+      .store_data_in(alu_second_input_wire),
       .MemRead_in(id_ex_mem_read_wire),
       .MemWrite_in(id_ex_mem_write_wire),
       .mem_size_in(id_ex_mem_size_wire),
@@ -207,32 +215,66 @@ module cpu #(
   reg branch_condition;
 
   always @(*) begin
-    case (fetched_instruction_pre_id[14:12])
-      3'b000:  branch_condition = (reg1_data_wire == reg2_data_wire);  // BEQ
-      3'b001:  branch_condition = (reg1_data_wire != reg2_data_wire);  // BNE
-      3'b100:  branch_condition = $signed(reg1_data_wire) < $signed(reg2_data_wire);  // BLT
-      3'b101:  branch_condition = $signed(reg1_data_wire) >= $signed(reg2_data_wire);  // BGE
-      3'b110:  branch_condition = reg1_data_wire < reg2_data_wire;  // BLTU
-      3'b111:  branch_condition = reg1_data_wire >= reg2_data_wire;  // BGEU
+    case (id_ex_funct3_wire)
+      3'b000:  branch_condition = (alu_first_input_wire == alu_second_input_wire);  // BEQ
+      3'b001:  branch_condition = (alu_first_input_wire != alu_second_input_wire);  // BNE
+      3'b100:  branch_condition = $signed(alu_first_input_wire) < $signed(alu_second_input_wire);  // BLT
+      3'b101:  branch_condition = $signed(alu_first_input_wire) >= $signed(alu_second_input_wire);  // BGE
+      3'b110:  branch_condition = alu_first_input_wire < alu_second_input_wire;  // BLTU
+      3'b111:  branch_condition = alu_first_input_wire >= alu_second_input_wire;  // BGEU
       default: branch_condition = 1'b0;
     endcase
   end
-  assign should_branch     = Branch_wire && branch_condition;
-  // Hazard unit placeholders. Control-flow redirect (resolved in ID) flushes the wrong-path fetch
+  assign should_branch = id_ex_branch_wire && branch_condition;
+  assign branch_taken_wire = should_branch || (id_ex_jump_wire != 2'b00);
+  // CONTROL AND HAZARD UNITS
+  forwarding_unit fu (
+      .ex_mem_RegWrite(ex_mem_regwrite_wire),
+      .mem_wb_RegWrite(mem_wb_reg_write_wire),
+      .ex_mem_rd(ex_mem_rd_wire),
+      .mem_wb_rd(mem_wb_rd_wire),
+      .id_ex_rs1(id_ex_rs1_wire),
+      .id_ex_rs2(id_ex_rs2_wire),
+      .forward_a(forward_a_wire),
+      .forward_b(forward_b_wire)
+  );
+  hazard_detection_unit hdu (
+      .id_ex_MemRead(id_ex_mem_read_wire),
+      .id_ex_rd(id_ex_rd_wire),
+      .if_id_rs1(fetched_instruction_pre_id[19:15]),
+      .if_id_rs2(fetched_instruction_pre_id[24:20]),
+      .branch_taken(branch_taken_wire),
+      .stall(stall_wire),
+      .stall_pc(stall_pc_wire),
+      .if_id_flush(if_id_flush_wire),
+      .id_ex_flush(id_ex_flush_wire)
+  );
   assign ex_mem_flush_wire = 1'b0;
   assign mem_wb_flush_wire = 1'b0;
-  assign stall_wire        = 1'b0;
-  assign id_ex_flush_wire  = 1'b0;
-  assign if_id_flush_wire  = should_branch || (Jump_wire != 2'b00);
   // Program Counter Datapath and Connection
   assign pc_plus_4         = pc_wire + 4;  // sequential fetch, not the ID-stage PC
-  assign branch_target     = pc_pre_id + immediate_wire;
-  assign jal_target        = pc_pre_id + immediate_wire;
-  assign jalr_target       = (reg1_data_wire + immediate_wire) & ~32'b1;
+  // Branches and jumps resolve in EX using the forwarded operands
+  assign branch_target     = id_ex_pc_wire + id_ex_immediate_wire;
+  assign jal_target        = id_ex_pc_wire + id_ex_immediate_wire;
+  assign jalr_target       = (alu_first_input_wire + id_ex_immediate_wire) & ~32'b1;
+  // JAL/JALR results are the link address, not the ALU output
+  assign ex_mem_forward_value = (ex_mem_result_src_wire == 2'b10) ? ex_mem_pc_wire + 32'd4 : ex_mem_alu_result_wire;
 
   always @(*) begin
+    case (forward_a_wire)
+      2'b00:   alu_first_input_wire = id_ex_reg1_data_wire;
+      2'b01:   alu_first_input_wire = ex_mem_forward_value;
+      2'b10:   alu_first_input_wire = wb_data_wire;
+      default: alu_first_input_wire = id_ex_reg1_data_wire;
+    endcase
+    case (forward_b_wire)
+      2'b00:   alu_second_input_wire = id_ex_reg2_data_wire;
+      2'b01:   alu_second_input_wire = ex_mem_forward_value;
+      2'b10:   alu_second_input_wire = wb_data_wire;
+      default: alu_second_input_wire = id_ex_reg2_data_wire;
+    endcase
     case (id_ex_alu_src_wire)
-      2'b00:   alu_second_input_reg = id_ex_reg2_data_wire;
+      2'b00:   alu_second_input_reg = alu_second_input_wire;
       2'b01:   alu_second_input_reg = id_ex_immediate_wire;
       2'b10:   alu_second_input_reg = id_ex_pc_wire;
       default: alu_second_input_reg = 32'b0;
@@ -244,12 +286,12 @@ module cpu #(
       default: wb_reg = 32'b0;
     endcase
     if (id_ex_alu_a_src_wire == 1) alu_first_input_reg = id_ex_pc_wire;
-    else alu_first_input_reg = id_ex_reg1_data_wire;
+    else alu_first_input_reg = alu_first_input_wire;
     // 1. Check if Jump / Jump Register
     // 2. Check for brach
     // 3. Opt for normal behaviour
-    if (Jump_wire == 2'b01) next_pc = jal_target;
-    else if (Jump_wire == 2'b10) next_pc = jalr_target;
+    if (id_ex_jump_wire == 2'b01) next_pc = jal_target;
+    else if (id_ex_jump_wire == 2'b10) next_pc = jalr_target;
     else if (should_branch == 1) next_pc = branch_target;
     else next_pc = pc_plus_4;
   end

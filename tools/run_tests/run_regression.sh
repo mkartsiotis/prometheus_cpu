@@ -57,8 +57,15 @@ run_test "Program counter" pc_tb \
   rtl/PC/rtl/pc.v rtl/PC/tb/pc_tb.v
 run_test "Instruction fetch" instruction_fetch_tb \
   rtl/FETCH/rtl/instruction_fetch.v rtl/PC/rtl/pc.v rtl/INSTRUCTION_MEMORY/rtl/instruction_memory.v rtl/FETCH/tb/instruction_fetch_tb.v
+run_test "Forwarding unit" forwarding_unit_tb \
+  rtl/FORWARDING_UNIT/rtl/forwarding_unit.v rtl/FORWARDING_UNIT/tb/forwarding_unit_tb.v
+run_test "Hazard detection" hazard_detection_unit_tb \
+  rtl/HAZARD_DETECTION_UNIT/rtl/hazard_detection_unit.v rtl/HAZARD_DETECTION_UNIT/tb/hazard_detection_unit_tb.v
 run_test "Integrated CPU" cpu_tb \
   rtl/CPU/rtl/cpu.v rtl/CPU/tb/cpu_tb.v rtl/FETCH/rtl/instruction_fetch.v rtl/PC/rtl/pc.v \
+  rtl/PIPELINE_REGS/if_id_reg.v rtl/PIPELINE_REGS/id_ex_reg.v rtl/PIPELINE_REGS/ex_mem_reg.v \
+  rtl/PIPELINE_REGS/mem_wb_reg.v rtl/FORWARDING_UNIT/rtl/forwarding_unit.v \
+  rtl/HAZARD_DETECTION_UNIT/rtl/hazard_detection_unit.v \
   rtl/INSTRUCTION_MEMORY/rtl/instruction_memory.v rtl/IMMEDIATE_GENERATOR/rtl/immediate_generator.v \
   rtl/CONTROL_UNIT/rtl/control_unit.v rtl/REG_FILE/rtl/reg_file.v rtl/MEMORY/rtl/memory.v \
   rtl/ALU/rtl/ALU.v rtl/ALU/rtl/adder.v rtl/ALU/rtl/bitwiseops.v rtl/ALU/rtl/shifter.v

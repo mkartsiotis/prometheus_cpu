@@ -13,6 +13,7 @@ module id_ex_reg (
     input [ 4:0] rs1_in,
     input [ 4:0] rs2_in,
     input [ 4:0] rd_in,
+    input [ 2:0] funct3_in,
     // Control signals
     input        RegWrite_in,
     input        MemRead_in,
@@ -36,6 +37,7 @@ module id_ex_reg (
     output [ 4:0] rs1_out,
     output [ 4:0] rs2_out,
     output [ 4:0] rd_out,
+    output [ 2:0] funct3_out,
     // Control signals
     output        RegWrite_out,
     output        MemRead_out,
@@ -57,6 +59,7 @@ module id_ex_reg (
   reg [ 4:0] rs1_reg;
   reg [ 4:0] rs2_reg;
   reg [ 4:0] rd_reg;
+  reg [ 2:0] funct3_reg;
   // Control signals
   reg        RegWrite_reg;
   reg        MemRead_reg;
@@ -80,6 +83,7 @@ module id_ex_reg (
       rs1_reg <= 5'b0;
       rs2_reg <= 5'b0;
       rd_reg <= 5'b0;
+      funct3_reg <= 3'b0;
       // Control signals
       RegWrite_reg <= 1'b0;
       MemRead_reg <= 1'b0;
@@ -101,6 +105,7 @@ module id_ex_reg (
       rs1_reg <= rs1_in;
       rs2_reg <= rs2_in;
       rd_reg <= rd_in;
+      funct3_reg <= funct3_in;
       // Control signals
       RegWrite_reg <= RegWrite_in;
       MemRead_reg <= MemRead_in;
@@ -124,6 +129,7 @@ module id_ex_reg (
   assign rs1_out       = rs1_reg;
   assign rs2_out       = rs2_reg;
   assign rd_out        = rd_reg;
+  assign funct3_out    = funct3_reg;
   // Control signals
   assign RegWrite_out  = RegWrite_reg;
   assign MemRead_out   = MemRead_reg;

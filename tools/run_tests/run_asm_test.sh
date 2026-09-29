@@ -46,6 +46,12 @@ WORDS="$(wc -l <"$BUILD/$NAME.hex")"
 
 iverilog -Wall -s cpu_image_tb -o "$BUILD/$NAME.out" \
   "$ROOT/rtl/CPU/rtl/cpu.v" \
+  "$ROOT/rtl/PIPELINE_REGS/if_id_reg.v" \
+  "$ROOT/rtl/PIPELINE_REGS/id_ex_reg.v" \
+  "$ROOT/rtl/PIPELINE_REGS/ex_mem_reg.v" \
+  "$ROOT/rtl/PIPELINE_REGS/mem_wb_reg.v" \
+  "$ROOT/rtl/FORWARDING_UNIT/rtl/forwarding_unit.v" \
+  "$ROOT/rtl/HAZARD_DETECTION_UNIT/rtl/hazard_detection_unit.v" \
   "$ROOT/rtl/CPU/tb/cpu_image_tb.v" \
   "$ROOT/rtl/FETCH/rtl/instruction_fetch.v" \
   "$ROOT/rtl/PC/rtl/pc.v" \

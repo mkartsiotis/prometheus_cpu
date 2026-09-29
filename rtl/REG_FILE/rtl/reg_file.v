@@ -14,8 +14,13 @@ module reg_file #(
     reg2_data
 );
   reg [(BIT_LENGTH - 1):0] regfile[1:(REG_NUMBER - 1)];
-  assign reg1_data = (reg1_sel == 0) ? 0 : regfile[reg1_sel];
-  assign reg2_data = (reg2_sel == 0) ? 0 : regfile[reg2_sel];
+  // Write-through bypass: an instruction in ID sees the value being written back this cycle
+  assign reg1_data = (reg1_sel == 0) ? {BIT_LENGTH{1'b0}} :
+                     (wb_enable && (reg1_sel == reg3_sel)) ? wb_data :
+                     regfile[reg1_sel];
+  assign reg2_data = (reg2_sel == 0) ? {BIT_LENGTH{1'b0}} :
+                     (wb_enable && (reg2_sel == reg3_sel)) ? wb_data :
+                     regfile[reg2_sel];
   always @(posedge clk) begin
     if (wb_enable == 1 && reg3_sel != 0) regfile[reg3_sel] <= wb_data;
   end
