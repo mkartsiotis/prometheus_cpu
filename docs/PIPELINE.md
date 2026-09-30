@@ -186,15 +186,89 @@ results as the single-cycle version, just pipelined.
 ## Synthesis & FPGA Bring-Up
 
 **In progress.** The target board is a **Digilent Basys 3** (Xilinx/AMD Artix-7,
-`xc7a35tcpg236-1`), synthesized and simulated with Vivado. Planned deliverables here:
+`xc7a35tcpg236-1`), synthesized with Vivado 2026.1. The core (`cpu.v`, top-level,
+all five stages + pipeline registers + forwarding/hazard units) synthesizes cleanly
+with 0 errors at a 100 MHz (10 ns) clock constraint, seeded with a real assembly
+program (`build/assembly/memory/memory.hex`) via a synthesis-only `$readmemh` generic
+so the numbers below reflect actual switching logic, not an all-NOP/all-zero memory.
 
-- Resource utilization (LUTs, flip-flops, block RAM) for the pipelined core.
-- Timing closure and maximum clock frequency (`Fmax`) on the target part.
-- Power estimate from Vivado's `report_power`.
-- A minimal FPGA top-level wrapper (clock/reset handling, a way to load a program into
-  instruction memory without a full bootloader yet).
+**Resource utilization** (post-synthesis, `xc7a35tcpg236-1`):
 
-Once this repo's synthesis results are in, the plan is to push the same RTL through a
-second, independent toolchain: synthesizing and running it on real hardware via
-**Intel's FPGA Developer Cloud**, with program loading over **UART**. That will be
-documented separately once underway.
+| Resource       | Used  | Available | Utilization |
+|----------------|-------|-----------|--------------|
+| Slice LUTs     | 2,647 | 20,800    | 12.7%        |
+| Slice Registers (FF) | 423 | 41,600 | 1.0%        |
+| Block RAM      | 0     | 50        | 0% (mapped to distributed/LUT RAM instead — worth revisiting with a `ram_style` attribute) |
+| DSP48          | 0     | 90        | 0%           |
+
+**Timing** (constrained at 100 MHz / 10.000 ns period):
+
+| Metric | Value |
+|--------|-------|
+| Worst Negative Slack (WNS) | -0.381 ns |
+| Worst Hold Slack (WHS)     | 0.101 ns  |
+| Worst Pulse Width Slack (WPWS) | 3.750 ns |
+| Failing endpoints | 32 / 21,572 |
+| Estimated max frequency (Fmax) | ≈ **96.3 MHz** (`1000 / (10.000 - (-0.381))`) |
+
+![Vivado Timing Summary report](images/timing_analysis_top.png)
+*Vivado's `report_timing_summary` on the synthesized `cpu` design, targeting
+`xc7a35t-cpg236 speed grade -1`, constrained at 100 MHz.*
+
+![Design Timing Summary showing a failing setup check](images/timing_analysis_failure.png)
+*The "Setup -0.381 ns" red flag under Intra-Clock Paths → clk. This means the design
+does not (yet) meet timing at exactly 100 MHz — explained below.*
+
+**What the red "X" actually means, in plain terms:** Setup timing failing means at
+least one combinational path between two flip-flops takes **longer** to settle than
+one clock period allows (10.000 ns here). WNS = -0.381 ns means the *worst* such path
+is 0.381 ns too slow — i.e. if the clock period were stretched from 10.000 ns to
+10.381 ns (≈96.3 MHz instead of 100 MHz), that same path would just barely pass. This
+is **not a functional bug** — the design still computes the correct logic; it just
+can't do it in time at the requested clock speed. It shows up with real program
+content (as opposed to an all-zero/all-NOP instruction memory, which trivially meets
+timing because most of the datapath is constant and gets optimized away — see the
+"Critical synthesis gotcha" note above). Only 32 endpoints out of 21,572 fail, and the
+margin is small (well under 1 ns), so this is a normal, very fixable first-pass
+timing result for a 5-stage pipeline with forwarding, not a fundamental architectural
+problem. Likely culprits are the wide forwarding muxes feeding the ALU inputs directly
+(`alu_first_input_wire`/`alu_second_input_wire` in `cpu.v`), or the ALU's carry chain
+for wider operations (shifts/comparisons) — chasing the exact path is next steps.
+
+Practical takeaway for now: the Basys 3 demo should be driven at a clock comfortably
+below the current Fmax (e.g. 50 MHz via a clock divider/MMCM in `fpga_top`) rather than
+100 MHz, to guarantee correct operation on real hardware while timing closure work
+continues in parallel.
+
+**Power** (vector-less estimate from the implemented netlist — no real switching
+activity/SAIF supplied yet, so treat this as a rough ballpark, not a precise figure):
+
+| Metric | Value |
+|--------|-------|
+| Total On-Chip Power | 0.099 W |
+| Dynamic Power       | 0.029 W (29%) |
+| Device Static Power | 0.070 W (71%) |
+| Junction Temperature | 25.5 °C |
+| Confidence level | Medium |
+
+![Vivado Power Summary report](images/power_analysis.png)
+*Vivado's `report_power` summary on the implemented netlist: 0.099 W total, split
+71%/29% static/dynamic. "Medium" confidence reflects that this is a vector-less
+estimate (no real simulation switching activity supplied) — good for a ballpark,
+not a datasheet-grade number.*
+
+Remaining work before real hardware bring-up:
+
+- A minimal FPGA top-level wrapper (`fpga_top`), since the `cpu` module's ~90-bit-wide
+  debug ports vastly exceed the Basys 3's ~106 available I/O pins. The wrapper will
+  expose only clock, a debounced reset button, switches, LEDs, and UART.
+- Basys 3 XDC constraints (clock pin, buttons, switches, LEDs, UART pins).
+- UART TX for exact result readout (reusing the existing `RESULT_MAILBOX`/`STATUS_MAILBOX`
+  convention at `mem[0]`/`mem[1]` from the C runtime).
+- Later, UART RX for program loading, needed for headless use on Intel's FPGA
+  Developer Cloud (no physical switches/LEDs there).
+
+Once this repo's synthesis results are in and hardware bring-up on the Basys 3 is
+validated, the plan is to push the same RTL through a second, independent toolchain:
+synthesizing and running it on real hardware via **Intel's FPGA Developer Cloud**,
+with program loading over **UART**. That will be documented separately once underway.
