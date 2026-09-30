@@ -1,7 +1,9 @@
 `timescale 1ns / 1ps
 
 module cpu #(
-    parameter DATA_ADDRESS_WIDTH = 12
+    parameter DATA_ADDRESS_WIDTH = 12,
+    parameter IMEM_SEED_HEX = ""  // optional $readmemh file, forwarded down to instruction_memory;
+                                  // only meaningful for synthesis, testbenches override it anyway
 ) (
     input clk,
     reset,
@@ -69,7 +71,9 @@ module cpu #(
       .mem_size(ex_mem_mem_size_wire),
       .read_data(mem_output_data_wire)
   );
-  instruction_fetch if_module (
+  instruction_fetch #(
+      .IMEM_SEED_HEX(IMEM_SEED_HEX)
+  ) if_module (
       .clk(clk),
       .reset(reset),
       .stop_pc(stall_pc_wire),

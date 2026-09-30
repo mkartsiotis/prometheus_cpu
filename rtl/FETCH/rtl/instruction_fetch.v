@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 
-module instruction_fetch (
+module instruction_fetch #(
+    parameter IMEM_SEED_HEX = ""  // optional $readmemh file for synthesis-time BRAM content
+) (
     input clk,
     reset,
     stop_pc,
@@ -16,7 +18,8 @@ module instruction_fetch (
       .pc_out(pc_out)
   );
   instruction_memory #(
-      .ADDRESS_WIDTH(15)
+      .ADDRESS_WIDTH(15),
+      .SEED_HEX(IMEM_SEED_HEX)
   ) imem (
       .address(pc_out),
       .instruction_out(instruction_out)
