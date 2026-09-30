@@ -58,6 +58,19 @@ module cpu_c_tester;
       .ALUop(ALUop)
   );
 
+  perf_monitor perf (
+      .clk(clk),
+      .reset(reset),
+      .stall(dut.stall_wire),
+      .if_id_flush(dut.if_id_flush_wire),
+      .id_ex_flush(dut.id_ex_flush_wire),
+      .ex_branch(dut.id_ex_branch_wire),
+      .ex_branch_taken(dut.branch_taken_wire && dut.id_ex_jump_wire == 2'b00),
+      .ex_jump(dut.id_ex_jump_wire),
+      .mem_read(dut.ex_mem_mem_read_wire),
+      .mem_write(dut.ex_mem_mem_write_wire)
+  );
+
   initial begin
     clk = 1'b0;
     forever #5 clk = ~clk;
@@ -142,6 +155,10 @@ module cpu_c_tester;
     $display("[PASS] Program completed");
     $display("PROGRAM_RESULT result=%0d status=%0d cycles=%0d", dut.mem.mem[0], dut.mem.mem[1],
              cycles);
+    $display(
+        "PERF instructions=%0d cpi=%0.2f stalls=%0d flush_bubbles=%0d loads=%0d stores=%0d branches=%0d taken=%0d jumps=%0d",
+        perf.retired, perf.get_cpi(0), perf.stalls, perf.flush_bubbles, perf.loads, perf.stores,
+        perf.branches, perf.taken_branches, perf.jumps);
     $finish(0);
   end
 endmodule

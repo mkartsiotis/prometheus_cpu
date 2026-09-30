@@ -1,5 +1,29 @@
 # Prometheus CPU
 
+**A RISC-V (RV32I) CPU written from scratch in Verilog — from a single-cycle datapath
+to a 5-stage pipeline with hazard detection and forwarding, running real
+GCC-compiled C.**
+
+> **Status: in progress.** The pipeline is functionally complete (see
+> [`docs/PIPELINE.md`](docs/PIPELINE.md)). Synthesis, timing, and power analysis
+> targeting a **Digilent Basys 3 (Xilinx/AMD Artix-7)** are underway, followed by a UART
+> bring-up on **Intel's FPGA Developer Cloud**.
+
+## Contents
+
+- [Basic Idea](#basic-idea)
+- [Quick Start](#quick-start)
+- [The Pipeline](#the-pipeline)
+- [Project History](#inital-steps-for-building-the-basic-skills) — the single-cycle build log, kept as-is below
+- [ALU Design](#alu-design-choices-and-opcodes)
+- [Register File](#register-file)
+- [ISA Decisions](#isa-and-more-design-decisions)
+- [Control Unit & Integration](#creating-the-control-unit)
+- [From RTL to Running RISC-V Assembly](#from-rtl-to-running-risc-v-assembly)
+- [Synthesis Data Metrics](#synthesis-data-metrics)
+- [Freestanding C](#freestanding-c)
+- [GCC Torture Suite](#running-gcc-torture)
+
 ## Basic Idea
 
 TPU's are the backbone of the recent AI breakthroughs and as a hardware technology seem to be less complex and more optimized than modern cpu's.
@@ -7,22 +31,31 @@ All of these led to the decision of creating a tpu based on verilog as a persona
 
 So this is essentially a baseline repository validating Verilog workflows on a CPU before moving on to creating a custom instruction extension and an acceleration module in the future.
 
-## How to run the CPU
+## Quick Start
 
-To run simple freestanding C programs in the CPU use the following makefile command:
+Run a freestanding C program on the CPU:
 
-```command
-make run PROGRAM=path/to/program.c
+```bash
+make run PROGRAM=programs/c/return_value.c
 ```
 
-> Note that it is best for the program to be inside the main project directory.
->
-### Results
+> The program path should be inside the main project directory.
 
-After running the command you will get an output of this form:  
+Run the full regression suite (every module testbench plus the integrated CPU):
+
+```bash
+./tools/run_tests/run_regression.sh
+```
+
+Run the assembly benchmark suite (correctness + cycle/CPI metrics):
+
+```bash
+./tools/run_tests/final_validation.sh
+```
+
+### Example output
 
 ```command
-❯ cd /home/michael/Future/prometheus_cpu
 ❯ make run PROGRAM=programs/c/return_value.c
 vvp "build/c/return_value/return_value.out" \
  "+INSTRUCTION_IMAGE=build/c/return_value/return_value.text.hex" \
@@ -38,11 +71,22 @@ vvp "build/c/return_value/return_value.out" \
 PROGRAM_RESULT result=25 status=1 cycles=21
 ```
 
-From this output we can notice that:  
+- **result** — the program's `main()` return value
+- **status** — completion status (`0`: in progress, `1`: success, `2`: fail)
+- **cycles** — number of clock cycles the program took to run
 
-- result = program main return value  
-- status = completion status(0: in progress, 1: success, 2: fail)  
-- cycles = number of cycles that took to run the program  
+## The Pipeline
+
+The CPU is a classic 5-stage pipeline (**IF → ID → EX → MEM → WB**) with:
+
+- a dedicated pipeline register between every stage,
+- a forwarding unit resolving back-to-back register dependencies without stalling,
+- a hazard detection unit that stalls on load-use hazards and flushes on taken
+  branches/jumps (resolved in EX),
+- waveform-verified evidence of all of the above.
+
+Full write-up, design rationale, and waveform captures:
+**[`docs/PIPELINE.md`](docs/PIPELINE.md)**
 
 ## Inital steps for building the basic skills  
 

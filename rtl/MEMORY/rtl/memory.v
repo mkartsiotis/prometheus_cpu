@@ -14,6 +14,12 @@ module memory #(
   //Since memory is combinational for single stage architecture we do not need
   //anything as a mem_read. So it is fine!
   reg [31:0] mem[0:(2**ADDRESS_WIDTH)-1];
+  // Zero-init so synthesis sees a defined value (BRAM needs a real INIT anyway);
+  // testbenches always overwrite this with $readmemh/direct pokes before running.
+  integer init_i;
+  initial begin
+    for (init_i = 0; init_i < (2 ** ADDRESS_WIDTH); init_i = init_i + 1) mem[init_i] = 32'b0;
+  end
   wire [ADDRESS_WIDTH-1:0] word_addr = address[ADDRESS_WIDTH+1:2];
   wire half_sel = address[1];
   wire [1:0] byte_sel = address[1:0];

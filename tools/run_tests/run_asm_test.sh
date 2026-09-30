@@ -53,6 +53,7 @@ iverilog -Wall -s cpu_image_tb -o "$BUILD/$NAME.out" \
   "$ROOT/rtl/FORWARDING_UNIT/rtl/forwarding_unit.v" \
   "$ROOT/rtl/HAZARD_DETECTION_UNIT/rtl/hazard_detection_unit.v" \
   "$ROOT/rtl/CPU/tb/cpu_image_tb.v" \
+  "$ROOT/tb/perf_monitor.v" \
   "$ROOT/rtl/FETCH/rtl/instruction_fetch.v" \
   "$ROOT/rtl/PC/rtl/pc.v" \
   "$ROOT/rtl/INSTRUCTION_MEMORY/rtl/instruction_memory.v" \

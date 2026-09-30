@@ -76,7 +76,7 @@ $(BUILD)/$(PROGRAM_NAME).out: \
 		rtl/CONTROL_UNIT/rtl/control_unit.v rtl/REG_FILE/rtl/reg_file.v \
 		rtl/MEMORY/rtl/memory.v rtl/ALU/rtl/ALU.v \
 		rtl/ALU/rtl/adder.v rtl/ALU/rtl/bitwiseops.v rtl/ALU/rtl/shifter.v \
-		tb/cpu_c_tester.v
+		tb/cpu_c_tester.v tb/perf_monitor.v
 	$(IVERILOG) -Wall -s cpu_c_tester -o "$@" $^
 
 run: $(TEXT_HEX) $(DATA_HEX) $(BUILD)/$(PROGRAM_NAME).out

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="sim.wdb" id="1">
+         <top_modules>
+            <top_module name="cpu_c_tester" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="530.267 ns"></ZoomStartTime>
+      <ZoomEndTime time="604.568 ns"></ZoomEndTime>
+      <Cursor1Time time="542.650 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="276"></NameColumnWidth>
+      <ValueColumnWidth column_width="80"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="25" />
+   <wvobject type="logic" fp_name="/cpu_c_tester/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/cpu_c_tester/reset">
+      <obj_property name="ElementShortName">reset</obj_property>
+      <obj_property name="ObjectShortName">reset</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/pc_wire">
+      <obj_property name="ElementShortName">pc_wire[31:0]</obj_property>
+      <obj_property name="ObjectShortName">pc_wire[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/id_ex_pc_wire">
+      <obj_property name="ElementShortName">id_ex_pc_wire[31:0]</obj_property>
+      <obj_property name="ObjectShortName">id_ex_pc_wire[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/ex_mem_pc_wire">
+      <obj_property name="ElementShortName">ex_mem_pc_wire[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ex_mem_pc_wire[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/mem_wb_pc_wire">
+      <obj_property name="ElementShortName">mem_wb_pc_wire[31:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_wb_pc_wire[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/cpu_c_tester/dut/stall_pc_wire">
+      <obj_property name="ElementShortName">stall_pc_wire</obj_property>
+      <obj_property name="ObjectShortName">stall_pc_wire</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/cpu_c_tester/dut/stall_wire">
+      <obj_property name="ElementShortName">stall_wire</obj_property>
+      <obj_property name="ObjectShortName">stall_wire</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/cpu_c_tester/dut/if_id_flush_wire">
+      <obj_property name="ElementShortName">if_id_flush_wire</obj_property>
+      <obj_property name="ObjectShortName">if_id_flush_wire</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/cpu_c_tester/dut/id_ex_flush_wire">
+      <obj_property name="ElementShortName">id_ex_flush_wire</obj_property>
+      <obj_property name="ObjectShortName">id_ex_flush_wire</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/cpu_c_tester/dut/branch_taken_wire">
+      <obj_property name="ElementShortName">branch_taken_wire</obj_property>
+      <obj_property name="ObjectShortName">branch_taken_wire</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/forward_a_wire">
+      <obj_property name="ElementShortName">forward_a_wire[1:0]</obj_property>
+      <obj_property name="ObjectShortName">forward_a_wire[1:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/forward_b_wire">
+      <obj_property name="ElementShortName">forward_b_wire[1:0]</obj_property>
+      <obj_property name="ObjectShortName">forward_b_wire[1:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/id_ex_rs1_wire">
+      <obj_property name="ElementShortName">id_ex_rs1_wire[4:0]</obj_property>
+      <obj_property name="ObjectShortName">id_ex_rs1_wire[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/id_ex_rs2_wire">
+      <obj_property name="ElementShortName">id_ex_rs2_wire[4:0]</obj_property>
+      <obj_property name="ObjectShortName">id_ex_rs2_wire[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/ex_mem_rd_wire">
+      <obj_property name="ElementShortName">ex_mem_rd_wire[4:0]</obj_property>
+      <obj_property name="ObjectShortName">ex_mem_rd_wire[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/mem_wb_rd_wire">
+      <obj_property name="ElementShortName">mem_wb_rd_wire[4:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_wb_rd_wire[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/alu_first_input_wire">
+      <obj_property name="ElementShortName">alu_first_input_wire[31:0]</obj_property>
+      <obj_property name="ObjectShortName">alu_first_input_wire[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/alu_second_input_wire">
+      <obj_property name="ElementShortName">alu_second_input_wire[31:0]</obj_property>
+      <obj_property name="ObjectShortName">alu_second_input_wire[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/alu_result_wire">
+      <obj_property name="ElementShortName">alu_result_wire[31:0]</obj_property>
+      <obj_property name="ObjectShortName">alu_result_wire[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/cpu_c_tester/dut/zero_wire">
+      <obj_property name="ElementShortName">zero_wire</obj_property>
+      <obj_property name="ObjectShortName">zero_wire</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/cpu_c_tester/dut/mem_read_wire">
+      <obj_property name="ElementShortName">mem_read_wire</obj_property>
+      <obj_property name="ObjectShortName">mem_read_wire</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/cpu_c_tester/dut/mem_write_wire">
+      <obj_property name="ElementShortName">mem_write_wire</obj_property>
+      <obj_property name="ObjectShortName">mem_write_wire</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/cpu_c_tester/dut/mem_wb_reg_write_wire">
+      <obj_property name="ElementShortName">mem_wb_reg_write_wire</obj_property>
+      <obj_property name="ObjectShortName">mem_wb_reg_write_wire</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/cpu_c_tester/dut/wb_data_wire">
+      <obj_property name="ElementShortName">wb_data_wire[31:0]</obj_property>
+      <obj_property name="ObjectShortName">wb_data_wire[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+</wave_config>
