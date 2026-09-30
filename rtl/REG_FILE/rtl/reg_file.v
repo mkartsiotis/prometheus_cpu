@@ -14,6 +14,12 @@ module reg_file #(
     reg2_data
 );
   reg [(BIT_LENGTH - 1):0] regfile[1:(REG_NUMBER - 1)];
+  // Zero-init so synthesis sees a defined value (BRAM/distributed RAM needs a real INIT anyway);
+  // testbenches always overwrite this with direct pokes before running.
+  integer init_i;
+  initial begin
+    for (init_i = 1; init_i < REG_NUMBER; init_i = init_i + 1) regfile[init_i] = {BIT_LENGTH{1'b0}};
+  end
   // Write-through bypass: an instruction in ID sees the value being written back this cycle
   assign reg1_data = (reg1_sel == 0) ? {BIT_LENGTH{1'b0}} :
                      (wb_enable && (reg1_sel == reg3_sel)) ? wb_data :

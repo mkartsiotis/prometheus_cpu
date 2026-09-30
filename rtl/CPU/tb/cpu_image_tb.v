@@ -57,6 +57,19 @@ module cpu_image_tb;
       .ALUop(ALUop)
   );
 
+  perf_monitor perf (
+      .clk(clk),
+      .reset(reset),
+      .stall(dut.stall_wire),
+      .if_id_flush(dut.if_id_flush_wire),
+      .id_ex_flush(dut.id_ex_flush_wire),
+      .ex_branch(dut.id_ex_branch_wire),
+      .ex_branch_taken(dut.branch_taken_wire && dut.id_ex_jump_wire == 2'b00),
+      .ex_jump(dut.id_ex_jump_wire),
+      .mem_read(dut.ex_mem_mem_read_wire),
+      .mem_write(dut.ex_mem_mem_write_wire)
+  );
+
   initial begin
     clk = 1'b0;
     forever #5 clk = ~clk;
@@ -102,14 +115,6 @@ module cpu_image_tb;
     while (!finished && cycles < max_cycles) begin
       @(posedge clk);
       cycles = cycles + 1;
-      instruction_count = instruction_count + 1;
-      if (dut.mem_read) load_count = load_count + 1;
-      else if (dut.mem_write) store_count = store_count + 1;
-      else if (Branch) begin
-        branch_count = branch_count + 1;
-        if (zero) taken_branch_count = taken_branch_count + 1;
-      end else if (Jump != 2'b00) jump_count = jump_count + 1;
-      else alu_count = alu_count + 1;
       #1;
       if (dut.mem.mem[1] === 32'd1) finished = 1'b1;
     end
@@ -126,12 +131,13 @@ module cpu_image_tb;
       $display("[PASS] Completion marker after %0d cycles", cycles);
     end
 
-    if (instruction_count > 0) cpi = cycles * 1.0 / instruction_count;
-    else cpi = 0.0;
+    cpi = perf.get_cpi(0);
     $display(
-        "BENCHMARK_RESULT program=%s cycles=%0d instructions=%0d cpi=%0.2f loads=%0d stores=%0d branches=%0d taken_branches=%0d jumps=%0d alu=%0d result=%0d",
-        image_file, cycles, instruction_count, cpi, load_count, store_count, branch_count,
-        taken_branch_count, jump_count, alu_count, dut.mem.mem[0]);
+        "BENCHMARK_RESULT program=%s cycles=%0d instructions=%0d cpi=%0.2f loads=%0d stores=%0d branches=%0d taken_branches=%0d jumps=%0d alu=%0d result=%0d stalls=%0d flush_bubbles=%0d",
+        image_file, perf.cycles, perf.retired, cpi, perf.loads, perf.stores, perf.branches,
+        perf.taken_branches, perf.jumps,
+        perf.retired - perf.loads - perf.stores - perf.branches - perf.jumps, dut.mem.mem[0],
+        perf.stalls, perf.flush_bubbles);
 
     if (errors == 0) $display("[PASS] Assembly image execution");
     else $finish(1);
