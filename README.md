@@ -14,7 +14,7 @@ GCC-compiled C.**
 - [Basic Idea](#basic-idea)
 - [Quick Start](#quick-start)
 - [The Pipeline](#the-pipeline)
-- [Project History](#inital-steps-for-building-the-basic-skills) — the single-cycle build log, kept as-is below
+- [Project History](#inital-steps-for-building-the-basic-skills) 
 - [ALU Design](#alu-design-choices-and-opcodes)
 - [Register File](#register-file)
 - [ISA Decisions](#isa-and-more-design-decisions)
