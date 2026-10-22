@@ -85,6 +85,72 @@ The CPU is a classic 5-stage pipeline (**IF → ID → EX → MEM → WB**) with
   branches/jumps (resolved in EX),
 - waveform-verified evidence of all of the above.
 
+### Architecture diagram
+
+Solid arrows are the datapath, dotted arrows are hazard/control side-channels, and
+double-bordered boxes are the pipeline registers (IF/ID, ID/EX, EX/MEM, MEM/WB).
+
+```mermaid
+flowchart LR
+  subgraph IF["1. IF: Fetch"]
+    PC["PC"] --> IMEM["Instruction<br/>Memory"]
+  end
+
+  IFID[["IF/ID<br/>instr, pc"]]
+
+  subgraph ID["2. ID: Decode"]
+    CU["Control Unit"]
+    RF["Register File<br/>(write-through bypass)"]
+    IMM["Immediate Gen"]
+  end
+
+  IDEX[["ID/EX<br/>rs1/rs2 data, imm, pc,<br/>rs1, rs2, rd, funct3,<br/>control signals"]]
+
+  subgraph EX["3. EX: Execute"]
+    FWD{{"Forwarding muxes<br/>operand A / B"}}
+    ALU["ALU<br/>(ALUSrc: reg / imm / pc)"]
+    BR["Branch compare<br/>+ jump / branch targets"]
+    FWD --> ALU
+    FWD --> BR
+  end
+
+  EXMEM[["EX/MEM<br/>alu result, store data,<br/>rd, pc, mem ctrl, RegWrite"]]
+
+  subgraph MEM["4. MEM: Data Memory"]
+    DMEM["Data Memory<br/>lb lh lw lbu lhu / sb sh sw"]
+  end
+
+  MEMWB[["MEM/WB<br/>alu result, load data,<br/>rd, pc, RegWrite"]]
+
+  subgraph WB["5. WB: Write Back"]
+    WBMUX{{"ResultSrc mux<br/>ALU / load / pc+4"}}
+  end
+
+  subgraph HAZ["Hazard hardware"]
+    FU["Forwarding Unit"]
+    HDU["Hazard Detection Unit"]
+  end
+
+  IMEM --> IFID --> CU & RF & IMM
+  CU & RF & IMM --> IDEX --> FWD
+  ALU --> EXMEM
+  EXMEM --> DMEM --> MEMWB
+  EXMEM --> MEMWB
+  MEMWB --> WBMUX
+  WBMUX -- "write back" --> RF
+
+  BR -- "redirect PC" --> PC
+
+  FU -. "forward_a/b select" .-> FWD
+  EXMEM -. "forward from EX/MEM" .-> FU
+  MEMWB -. "forward from MEM/WB" .-> FU
+  BR -. "branch_taken" .-> HDU
+  IDEX -. "load-use check" .-> HDU
+  HDU -. "stall PC + IF/ID" .-> PC
+  HDU -. "flush" .-> IFID
+  HDU -. "bubble" .-> IDEX
+```
+
 Full write-up, design rationale, and waveform captures:
 **[`docs/PIPELINE.md`](docs/PIPELINE.md)**
 
