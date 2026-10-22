@@ -37,6 +37,111 @@ Each stage boundary is a dedicated pipeline register module
 per-stage hazard logic tractable: every stage always knows exactly which instruction it
 is currently working on.
 
+## Architecture diagram
+
+Solid arrows are the datapath; dotted arrows are hazard/control side-channels. Boxes
+with double borders are the four pipeline registers. A high-resolution PNG copy is in
+[`images/pipeline_architecture.png`](images/pipeline_architecture.png).
+
+```mermaid
+flowchart LR
+  subgraph IF["1. IF: Fetch"]
+    PC["PC"] --> IMEM["Instruction<br/>Memory"]
+  end
+
+  IFID[["IF/ID<br/>instr, pc"]]
+
+  subgraph ID["2. ID: Decode"]
+    CU["Control Unit"]
+    RF["Register File<br/>(write-through bypass)"]
+    IMM["Immediate Gen"]
+  end
+
+  IDEX[["ID/EX<br/>rs1/rs2 data, imm, pc,<br/>rs1, rs2, rd, funct3,<br/>control signals"]]
+
+  subgraph EX["3. EX: Execute"]
+    FWD{{"Forwarding muxes<br/>operand A / B"}}
+    ALU["ALU<br/>(ALUSrc: reg / imm / pc)"]
+    BR["Branch compare<br/>+ jump / branch targets"]
+    FWD --> ALU
+    FWD --> BR
+  end
+
+  EXMEM[["EX/MEM<br/>alu result, store data,<br/>rd, pc, mem ctrl, RegWrite"]]
+
+  subgraph MEM["4. MEM: Data Memory"]
+    DMEM["Data Memory<br/>lb lh lw lbu lhu / sb sh sw"]
+  end
+
+  MEMWB[["MEM/WB<br/>alu result, load data,<br/>rd, pc, RegWrite"]]
+
+  subgraph WB["5. WB: Write Back"]
+    WBMUX{{"ResultSrc mux<br/>ALU / load / pc+4"}}
+  end
+
+  subgraph HAZ["Hazard hardware"]
+    FU["Forwarding Unit"]
+    HDU["Hazard Detection Unit"]
+  end
+
+  IMEM --> IFID --> CU & RF & IMM
+  CU & RF & IMM --> IDEX --> FWD
+  ALU --> EXMEM
+  EXMEM --> DMEM --> MEMWB
+  EXMEM --> MEMWB
+  MEMWB --> WBMUX
+  WBMUX -- "write back" --> RF
+
+  BR -- "redirect PC" --> PC
+
+  FU -. "forward_a/b select" .-> FWD
+  EXMEM -. "forward from EX/MEM" .-> FU
+  MEMWB -. "forward from MEM/WB" .-> FU
+  BR -. "branch_taken" .-> HDU
+  IDEX -. "load-use check" .-> HDU
+  HDU -. "stall PC + IF/ID" .-> PC
+  HDU -. "flush" .-> IFID
+  HDU -. "bubble" .-> IDEX
+```
+
+![Pipeline architecture](images/pipeline_architecture.png)
+
+### What each pipeline register carries
+
+| Register | Module | Data carried | Control carried |
+| --- | --- | --- | --- |
+| **IF/ID** | `if_id_reg` | instruction, `pc` | none yet (decode happens next stage); `stall` holds it, `flush` zeroes it |
+| **ID/EX** | `id_ex_reg` | `reg1_data`, `reg2_data`, `immediate`, `pc`, `rs1`, `rs2`, `rd`, `funct3` | `RegWrite`, `MemRead`, `MemWrite`, `Branch`, `Jump`, `Exception`, `AluA_Src`, `ALUSrc`, `ResultSrc`, `ALUop`, `mem_size`; `flush` inserts a bubble |
+| **EX/MEM** | `ex_mem_reg` | `alu_result`, `store_data` (forwarded `rs2`), `rd`, `pc` | `MemRead`, `MemWrite`, `mem_size`, `RegWrite`, `ResultSrc` |
+| **MEM/WB** | `mem_wb_reg` | `alu_result`, `memory_read_data`, `rd`, `pc` | `RegWrite`, `ResultSrc` |
+
+Control signals shrink as they travel down the pipe: once a signal has done its job
+(e.g. `ALUop` in EX, `MemWrite` in MEM) it is not carried further.
+
+### Stage-by-stage walkthrough
+
+| Stage | What happens | Modules involved | Signals out |
+| --- | --- | --- | --- |
+| **IF** | `pc` indexes instruction memory; next PC is `pc + 4` unless EX redirects it. `stall_pc` freezes the PC on a load-use hazard. | `pc`, `instruction_memory`, `instruction_fetch` | instruction, `pc` into IF/ID |
+| **ID** | Control unit decodes the opcode; register file reads `rs1`/`rs2`; immediate generator sign-extends. | `control_unit`, `reg_file`, `immediate_generator` | operands, immediate, control word into ID/EX |
+| **EX** | Forwarding muxes pick each operand from ID/EX, EX/MEM or WB. `ALUSrc` selects reg/imm/pc for operand B, `AluA_Src` selects reg/pc for A. ALU computes. Branch compare uses `funct3` (BEQ/BNE/BLT/BGE/BLTU/BGEU). Branch/JAL target = `pc + imm`, JALR target = `(rs1 + imm) & ~1`. | `alu`, `forwarding_unit`, branch logic in `cpu.v` | ALU result, store data, redirect PC + `branch_taken` |
+| **MEM** | Loads/stores access data memory using `alu_result` as address and `mem_size` for byte/half/word with sign/zero extension. | `memory` | load data into MEM/WB |
+| **WB** | `ResultSrc` picks ALU result, load data, or `pc + 4` (JAL/JALR link) and writes it to `rd`. The register file's write-through bypass lets ID read a value being written in the same cycle. | `reg_file`, WB mux in `cpu.v` | write data/enable to the register file; also forwarded to EX |
+
+### Pipeline occupancy example
+
+A load followed immediately by a dependent instruction (`lw x2, 0(x1)` then
+`add x3, x2, x2`) costs one stall cycle. The bubble travels down the pipe:
+
+| Cycle | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `lw x2, 0(x1)` | IF | ID | EX | MEM | WB | | |
+| `add x3, x2, x2` | | IF | ID | **stall** | EX | MEM | WB |
+
+With no load involved, back-to-back dependencies need no stall at all: the result is
+forwarded from EX/MEM (or MEM/WB) straight into the ALU inputs. A taken branch/jump is
+resolved in EX and flushes the two younger wrong-path instructions (the 2-bubble penalty).
+
 ## Design decisions worth calling out
 
 - **Branches, `jal`, and `jalr` all resolve in EX**, not ID. The branch comparison uses
